@@ -57,9 +57,28 @@ When invoked frequently, apply these 8 rules first:
 
 - [ ] Scan the full file. Label each line as: source lyric / target-language line / metadata / special (blank / SFX / filler / production credit).
 - [ ] Determine song subject, emotional tone, and narrative POV (first person, third person, duet, multi-voice).
-- [ ] For duets/multi-voice: build a speaker map (who speaks in each section, what pronouns refer to whom).
+- [ ] For duets/multi-voice: build a speaker map using these steps:
+  1. Identify distinct voices from metadata cues (e.g., `[Singer A]`), color brackets, or contextual shifts in pronouns/register.
+  2. Assign each section to a speaker. If ambiguous, mark as "shared" and resolve from surrounding lines.
+  3. Maintain voice-differentiated register in translation: if Speaker A uses casual speech and Speaker B is formal, their translations must reflect this even when the source language doesn't mark it overtly (common in EN → JA/KO).
+  4. For pronoun crossover (A refers to B, B refers to A with same word like "you"): ensure the translations use consistent, distinct renderings for each speaker's "you."
+  5. Chorus/unison sections: use a neutral shared register unless the song clearly assigns different lyrics to simultaneous voices (in which case translate each independently).
 - [ ] Lock in chorus, hook, and core-imagery translations to use consistently throughout.
 - [ ] Flag long-sentence splits, chained grammar, and code-mixed passages. For lines with existing translations, decide: keep, overwrite, or skip (never stack).
+- [ ] **Multi-Source-Language Detection** — Check whether the file contains blocks of lyrics in a language different from the primary source language. This is *not* the same as single-line code-mixing (e.g., a Japanese line with a few English words); this is **block-level language switching** where consecutive lines are entirely in a different language.
+
+  **How to detect**: While labeling lines, note any run of 2+ consecutive source-lyric lines whose script/language differs from the primary source. Common patterns:
+  - Japanese song with an English bridge or rap section
+  - Korean song with Japanese verses
+  - English song with a full Chinese chorus
+
+  **What to do when detected**:
+  1. Identify each secondary source language present (there may be more than one).
+  2. Load `reference/source/{secondary}.md` for each secondary language found. Also load the corresponding `reference/pair-exceptions.md` entry for `{secondary}→{target}` if one exists.
+  3. Tag each source-lyric line in your internal survey with its actual language (e.g., `JA`, `EN`), not just the primary.
+  4. During Steps 2–4 (Key Phrase Resolution, Semantic Chunking, Translation), apply the source-language rules that match each line's tagged language — not the primary source rules uniformly.
+
+  **What does NOT trigger this**: Filler lines that happen to be in another language (e.g., `Oh oh oh`, `La la la`) are already handled by Filler Line Passthrough — they don't count as a secondary source language block. Single-line code-mixed lines (Japanese sentence with scattered English words) are already handled by the existing code-mixed rule — use the primary source rules and translate the overall meaning.
 
 ### Step 2 — Key Phrase Resolution (In-Memory)
 
@@ -246,9 +265,10 @@ Use `reference/source/{source}.md`, `reference/target/{target}.md`, and applicab
 | LRC metadata tag | Starts with `[ti:` `[ar:` `[al:` `[by:` `[offset:` | Never translate or modify |
 | Embedded production credit | Contains `词：` `曲：` `編曲：` `作詞：` `作曲：` `Lyrics:` `Music:` etc. | Never translate or modify |
 | Already-target-language line | Entire line is in target language | Pass through, no translation |
-| Already-English line (non-EN source) | Entire line is English (e.g. `Yeah yeah`, `Oh baby`) | Pass through, no translation |
+| Filler vocalization in another language | Short exclamatory line in a non-primary language with no semantic content (e.g. `Yeah yeah`, `Oh baby`, `Come on`) | Pass through, no translation |
+| Secondary-language block | 2+ consecutive lines entirely in a non-primary source language **with semantic content** (see Multi-Source-Language Detection in Step 1) | Translate using that language's source rules |
 | Filler vocalization | `오오오` / `あーあー` / `Oh oh oh` / `La la la` / `啦啦啦` etc. | Pass through, no translation |
-| Code-mixed line | Source language mixed with other languages within the line | Preserve source line; translate overall meaning naturally |
+| Code-mixed line | Source language mixed with other languages **within a single line** | Preserve source line; translate overall meaning using primary source rules |
 | Ellipsis pause line | `…` denoting trailing-off or silence | Preserve `…` in translation, or carry the pause feeling into register |
 
 ---
