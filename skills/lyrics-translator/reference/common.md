@@ -1,6 +1,6 @@
 # Lyric Translation — Shared Rules
 
-Applies to all 12 direction pairs (ZH/JA/KO/EN). Use with the selected source-language and target-language references, plus any applicable pair exception.
+Applies to all global translation directions across world languages (dedicated profiles for ZH, JA, KO, EN, FR, ES, DE, IT, PT, RU, TH, VI, YUE, plus generic fallback for all others). Use with the selected source and target references, plus any applicable pair exception.
 
 ---
 
@@ -135,7 +135,7 @@ Block 3: [lines D, E]   — chained (incomplete predicate / verb-ending stack)
 
 **Procedure:**
 
-1. Detect source language (JA / EN / ZH / KO) and load block-detection signals from `reference/source/{source}.md`.
+1. Detect source language and load block-detection signals from `reference/source/{source}.md` (or `reference/source/generic.md` if unprofiled).
 2. Scan each source line for incomplete-sentence signals (see table below).
 3. Group consecutive semantically connected lines into a **semantic block**. A block may be 1 line (self-contained) or multiple lines (chained/dependent).
 4. **Translate at block level**: Derive meaning, pronouns, and register from the full block, then output one translation per source line.
@@ -185,7 +185,7 @@ Violating this guard is a critical translation error.
 [00:02]溶けてゆくように  →  又如同在消融
 ```
 
-> Language-specific block-detection signals (JA te-form chains, EN enjambment, ZH poetic cuts, KO verb-ending stacks) are defined in `reference/source/{source}.md`.
+> Language-specific block-detection signals (e.g. JA te-form chains, EN/FR enjambment, DE verb brackets, ZH poetic cuts, KO verb-ending stacks, ES/IT sinalefa/elision) are defined in `reference/source/{source}.md` (or `reference/source/generic.md`).
 
 ### Step 4 — Translate (First Draft)
 
