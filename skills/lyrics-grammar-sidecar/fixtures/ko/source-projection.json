@@ -1,0 +1,28 @@
+{
+  "lineCount": 2,
+  "lines": [
+    {
+      "fingerprint": "sha256:0aea28dc71b116623d642947e6c797ae931d818a9a17927b8fdc954b809366fa",
+      "lineId": "l_339b430c43f26ea9",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 0,
+      "text": "너에게 보내는",
+      "timeMs": 2000
+    },
+    {
+      "fingerprint": "sha256:8d829c6689f31042360ce1b63ff77a490ba4bff2fa227d6f6a7053a463287736",
+      "lineId": "l_0b56b8a7c57ca70e",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 1,
+      "text": "짧은 편지야",
+      "timeMs": 4000
+    }
+  ],
+  "lrcFile": "source.lrc",
+  "lrcProjectionHash": "sha256:50b198bde8af13e1fe6388a481e73bde4b36e029ba133c8d0d2b90fc5ceec033",
+  "projectionVersion": "sakurauta-lrc-text-projection-v1",
+  "schema": "sakurauta.lyrics-grammar-source-projection",
+  "songId": "Fixture - Korean Letter"
+}

@@ -1,0 +1,105 @@
+{
+  "blocks": [
+    {
+      "blockId": "b_main",
+      "confidence": 0.9,
+      "endTimeMs": 8000,
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "discourse"
+        }
+      ],
+      "lineIds": [
+        "l_63181af5e4d1d223",
+        "l_36999d61e7af0f7b"
+      ],
+      "meaning": "这是一封短短的信。",
+      "startTimeMs": 6000
+    }
+  ],
+  "grammarNotes": [
+    {
+      "confidence": 0.82,
+      "explanation": "句子成分跨行延续。",
+      "labels": [
+        {
+          "key": "cross_line",
+          "namespace": "syntax"
+        }
+      ],
+      "noteId": "g_main",
+      "scope": {
+        "blockId": "b_main",
+        "phraseId": "p_main"
+      }
+    }
+  ],
+  "lines": [
+    {
+      "fingerprint": "sha256:ae2af1e9e444214ddb87d68d62f68ce298d3d8eb4c6abc655888d741258d18aa",
+      "language": "zh",
+      "lineId": "l_63181af5e4d1d223",
+      "role": "text",
+      "sourceOrder": 0,
+      "text": "把星光收进",
+      "timeMs": 6000
+    },
+    {
+      "fingerprint": "sha256:c77c68187513834d2fcc9c111ce2a77570d024a3d7afde1c8ddfa972b74e4914",
+      "language": "zh",
+      "lineId": "l_36999d61e7af0f7b",
+      "role": "text",
+      "sourceOrder": 1,
+      "text": "未寄出的信",
+      "timeMs": 8000
+    }
+  ],
+  "phrases": [
+    {
+      "blockIds": [
+        "b_main"
+      ],
+      "confidence": 0.84,
+      "explanation": "两行共同组成一个完整表达。",
+      "gloss": "a letter",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "lang:zh"
+        }
+      ],
+      "phraseId": "p_main",
+      "role": "minimal_phrase",
+      "sourceSegments": [
+        {
+          "end": 5,
+          "lineId": "l_63181af5e4d1d223",
+          "start": 0,
+          "text": "把星光收进"
+        },
+        {
+          "end": 5,
+          "lineId": "l_36999d61e7af0f7b",
+          "start": 0,
+          "text": "未寄出的信"
+        }
+      ],
+      "surface": "把星光收进未寄出的信"
+    }
+  ],
+  "relations": [],
+  "schema": "sakurauta.lyrics-grammar-analysis",
+  "schemaVersion": 1,
+  "source": {
+    "lineCount": 2,
+    "lrcFile": "source.lrc",
+    "lrcProjectionHash": "sha256:92064ce2a38e48905a85467fc30f5d4fd6aabd6b3b7c2a893a1817cd737afa79",
+    "songId": "Fixture - Chinese Night",
+    "sourceLanguages": [
+      "zh"
+    ]
+  },
+  "uncertainties": []
+}

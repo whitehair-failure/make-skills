@@ -1,0 +1,105 @@
+{
+  "blocks": [
+    {
+      "blockId": "b_main",
+      "confidence": 0.9,
+      "endTimeMs": 4000,
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "discourse"
+        }
+      ],
+      "lineIds": [
+        "l_339b430c43f26ea9",
+        "l_0b56b8a7c57ca70e"
+      ],
+      "meaning": "한 통의 짧은 편지입니다.",
+      "startTimeMs": 2000
+    }
+  ],
+  "grammarNotes": [
+    {
+      "confidence": 0.82,
+      "explanation": "문장 성분이 줄을 걸쳐 이어집니다.",
+      "labels": [
+        {
+          "key": "cross_line",
+          "namespace": "syntax"
+        }
+      ],
+      "noteId": "g_main",
+      "scope": {
+        "blockId": "b_main",
+        "phraseId": "p_main"
+      }
+    }
+  ],
+  "lines": [
+    {
+      "fingerprint": "sha256:0aea28dc71b116623d642947e6c797ae931d818a9a17927b8fdc954b809366fa",
+      "language": "ko",
+      "lineId": "l_339b430c43f26ea9",
+      "role": "text",
+      "sourceOrder": 0,
+      "text": "너에게 보내는",
+      "timeMs": 2000
+    },
+    {
+      "fingerprint": "sha256:8d829c6689f31042360ce1b63ff77a490ba4bff2fa227d6f6a7053a463287736",
+      "language": "ko",
+      "lineId": "l_0b56b8a7c57ca70e",
+      "role": "text",
+      "sourceOrder": 1,
+      "text": "짧은 편지야",
+      "timeMs": 4000
+    }
+  ],
+  "phrases": [
+    {
+      "blockIds": [
+        "b_main"
+      ],
+      "confidence": 0.84,
+      "explanation": "두 줄이 하나의 문장을 이룹니다.",
+      "gloss": "a short letter",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "lang:ko"
+        }
+      ],
+      "phraseId": "p_main",
+      "role": "minimal_phrase",
+      "sourceSegments": [
+        {
+          "end": 7,
+          "lineId": "l_339b430c43f26ea9",
+          "start": 0,
+          "text": "너에게 보내는"
+        },
+        {
+          "end": 6,
+          "lineId": "l_0b56b8a7c57ca70e",
+          "start": 0,
+          "text": "짧은 편지야"
+        }
+      ],
+      "surface": "너에게 보내는짧은 편지야"
+    }
+  ],
+  "relations": [],
+  "schema": "sakurauta.lyrics-grammar-analysis",
+  "schemaVersion": 1,
+  "source": {
+    "lineCount": 2,
+    "lrcFile": "source.lrc",
+    "lrcProjectionHash": "sha256:50b198bde8af13e1fe6388a481e73bde4b36e029ba133c8d0d2b90fc5ceec033",
+    "songId": "Fixture - Korean Letter",
+    "sourceLanguages": [
+      "ko"
+    ]
+  },
+  "uncertainties": []
+}

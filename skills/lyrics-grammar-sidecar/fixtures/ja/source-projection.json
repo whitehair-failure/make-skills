@@ -1,0 +1,46 @@
+{
+  "lineCount": 4,
+  "lines": [
+    {
+      "fingerprint": "sha256:dae84c24f232203e3b94c5e4003d00aba213e99e502d63f16b2215c116696644",
+      "lineId": "l_b9a7b78579cb568f",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 0,
+      "text": "君がくれた",
+      "timeMs": 1000
+    },
+    {
+      "fingerprint": "sha256:5d719b27e9a9905177571d504990c78bc7aa7905be0897ebfca4d57f9e213f93",
+      "lineId": "l_514ca07d16f17fd0",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 1,
+      "text": "小さな約束を",
+      "timeMs": 3000
+    },
+    {
+      "fingerprint": "sha256:4720420b4aee38e7311d7d079bd51846c89537ddf367d0c07c110347901d8473",
+      "lineId": "l_7420f4f661e24064",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 2,
+      "text": "今でも覚えている",
+      "timeMs": 5000
+    },
+    {
+      "fingerprint": "sha256:dae84c24f232203e3b94c5e4003d00aba213e99e502d63f16b2215c116696644",
+      "lineId": "l_6886e9219b28383b",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 3,
+      "text": "君がくれた",
+      "timeMs": 7000
+    }
+  ],
+  "lrcFile": "source.lrc",
+  "lrcProjectionHash": "sha256:739e7c6dea9460df9da216db818e872aac4baf54159eb30e64c1957dff18fabd",
+  "projectionVersion": "sakurauta-lrc-text-projection-v1",
+  "schema": "sakurauta.lyrics-grammar-source-projection",
+  "songId": "Fixture - Japanese Promise"
+}

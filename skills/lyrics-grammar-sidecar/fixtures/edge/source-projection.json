@@ -1,0 +1,37 @@
+{
+  "lineCount": 3,
+  "lines": [
+    {
+      "fingerprint": "sha256:886873aaf86f0c7d12993b8bf57a6facb1b185cc765e7ce37e652c189d00b101",
+      "lineId": "l_f6960855204db522",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 0,
+      "text": "😀é",
+      "timeMs": 10000
+    },
+    {
+      "fingerprint": "sha256:4e42d0b0d8be98b0964228d1da4fce746e2e4b948cb9268ed6788f57ff52faaf",
+      "lineId": "l_e42cab7a3a0a1d06",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 1,
+      "text": "same",
+      "timeMs": 20000
+    },
+    {
+      "fingerprint": "sha256:4e42d0b0d8be98b0964228d1da4fce746e2e4b948cb9268ed6788f57ff52faaf",
+      "lineId": "l_382e4bdca7aa352e",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 2,
+      "text": "same",
+      "timeMs": 30000
+    }
+  ],
+  "lrcFile": "source.lrc",
+  "lrcProjectionHash": "sha256:6977e9ba92bf2a2076cb95d16e9414495319ed0b0038bef76ed077bf76e62125",
+  "projectionVersion": "sakurauta-lrc-text-projection-v1",
+  "schema": "sakurauta.lyrics-grammar-source-projection",
+  "songId": "Fixture - Unicode Edge"
+}

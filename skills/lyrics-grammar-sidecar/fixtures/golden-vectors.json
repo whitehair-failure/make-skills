@@ -1,0 +1,95 @@
+{
+  "contractVersions": {
+    "projection": "sakurauta-lrc-text-projection-v1",
+    "lineId": "sakurauta-lyric-line-id-v1",
+    "fingerprint": "sakurauta-lyric-text-fingerprint-v1"
+  },
+  "fixtures": [
+    {
+      "name": "ja-repeated-same-text",
+      "songId": "Cross-Repository Golden Song",
+      "lrc": "[00:01.00]同じ\n[00:02.00]同じ\n",
+      "lines": [
+        {
+          "sourceOrder": 0,
+          "timeMs": 1000,
+          "sameTimestampOrdinal": 0,
+          "text": "同じ",
+          "lineId": "l_ba2e480d9af05b48",
+          "fingerprint": "sha256:808b3400b4e4a74cab1dadb9abca075bf8a5ffe20d83c67157baf13de102abc3"
+        },
+        {
+          "sourceOrder": 1,
+          "timeMs": 2000,
+          "sameTimestampOrdinal": 0,
+          "text": "同じ",
+          "lineId": "l_fb02298005eb6121",
+          "fingerprint": "sha256:808b3400b4e4a74cab1dadb9abca075bf8a5ffe20d83c67157baf13de102abc3"
+        }
+      ],
+      "lrcProjectionHash": "sha256:506f7b0365ebe39bfa29bc53ef05be8df14790357d44c691cd95d2ab06c7a0ac"
+    },
+    {
+      "name": "same-timestamp-bilingual",
+      "songId": "Cross-Repository Golden Song",
+      "lrc": "[00:01.00]君を想う\n[00:01.00]I miss you\n[00:02.00]夢を見る\n",
+      "lines": [
+        {
+          "sourceOrder": 0,
+          "timeMs": 1000,
+          "sameTimestampOrdinal": 0,
+          "text": "君を想う",
+          "lineId": "l_6775462d7bfbc631",
+          "fingerprint": "sha256:e1d155d14312ef85f6155081f3f076305f55063f6a07e41d08da62e9a31986c0"
+        },
+        {
+          "sourceOrder": 1,
+          "timeMs": 2000,
+          "sameTimestampOrdinal": 0,
+          "text": "夢を見る",
+          "lineId": "l_6bef48edd4acbb24",
+          "fingerprint": "sha256:7d057519558a3ca73a5a80654a7b0275881d835034466c77e8e40e26b3c4d00f"
+        }
+      ],
+      "lrcProjectionHash": "sha256:155678eedeaf199773ecead5fc538d4d3a9bda5b999dfca1f5d292baa7d13ec9"
+    },
+    {
+      "name": "unicode-code-point-segment",
+      "songId": "Cross-Repository Golden Song",
+      "lrc": "[00:01.00]君😀が\n[00:02.00]がくせい\n",
+      "lines": [
+        {
+          "sourceOrder": 0,
+          "timeMs": 1000,
+          "sameTimestampOrdinal": 0,
+          "text": "君😀が",
+          "lineId": "l_d365b985642ee5ac",
+          "fingerprint": "sha256:3c74a78502b0eb21971281c7aacc276982cca58d1a60737e5c9cd47ddc3059dd"
+        },
+        {
+          "sourceOrder": 1,
+          "timeMs": 2000,
+          "sameTimestampOrdinal": 0,
+          "text": "がくせい",
+          "lineId": "l_32a78658b1543c47",
+          "fingerprint": "sha256:b3e1a3f31dece436af13df0e2c321ce9e9e9360cf5c6442cc09001d7ee8ac4a0"
+        }
+      ],
+      "lrcProjectionHash": "sha256:92fcf86eed0b0e6b98875c117258a3da9cd23c118804c8af8e43a20d621f9723",
+      "segments": [
+        {
+          "lineIndex": 0,
+          "start": 0,
+          "end": 2,
+          "text": "君😀"
+        },
+        {
+          "lineIndex": 1,
+          "start": 0,
+          "end": 2,
+          "text": "が"
+        }
+      ]
+    }
+  ]
+}

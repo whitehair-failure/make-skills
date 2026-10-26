@@ -1,0 +1,28 @@
+{
+  "lineCount": 2,
+  "lines": [
+    {
+      "fingerprint": "sha256:ae2af1e9e444214ddb87d68d62f68ce298d3d8eb4c6abc655888d741258d18aa",
+      "lineId": "l_63181af5e4d1d223",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 0,
+      "text": "把星光收进",
+      "timeMs": 6000
+    },
+    {
+      "fingerprint": "sha256:c77c68187513834d2fcc9c111ce2a77570d024a3d7afde1c8ddfa972b74e4914",
+      "lineId": "l_36999d61e7af0f7b",
+      "role": "text",
+      "sameTimestampOrdinal": 0,
+      "sourceOrder": 1,
+      "text": "未寄出的信",
+      "timeMs": 8000
+    }
+  ],
+  "lrcFile": "source.lrc",
+  "lrcProjectionHash": "sha256:92064ce2a38e48905a85467fc30f5d4fd6aabd6b3b7c2a893a1817cd737afa79",
+  "projectionVersion": "sakurauta-lrc-text-projection-v1",
+  "schema": "sakurauta.lyrics-grammar-source-projection",
+  "songId": "Fixture - Chinese Night"
+}

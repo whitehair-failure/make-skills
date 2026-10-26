@@ -1,0 +1,105 @@
+{
+  "blocks": [
+    {
+      "blockId": "b_main",
+      "confidence": 0.9,
+      "endTimeMs": 11000,
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "discourse"
+        }
+      ],
+      "lineIds": [
+        "l_dd6729d66a8bf6f4",
+        "l_2555b66844440f8e"
+      ],
+      "meaning": "A door is kept open for an echo.",
+      "startTimeMs": 9000
+    }
+  ],
+  "grammarNotes": [
+    {
+      "confidence": 0.82,
+      "explanation": "The clause continues across lines.",
+      "labels": [
+        {
+          "key": "cross_line",
+          "namespace": "syntax"
+        }
+      ],
+      "noteId": "g_main",
+      "scope": {
+        "blockId": "b_main",
+        "phraseId": "p_main"
+      }
+    }
+  ],
+  "lines": [
+    {
+      "fingerprint": "sha256:9878ef1530c6a441cfbab0e04429b9bd99e053a088c2771e69786bee5ca68912",
+      "language": "en",
+      "lineId": "l_dd6729d66a8bf6f4",
+      "role": "text",
+      "sourceOrder": 0,
+      "text": "I kept the door",
+      "timeMs": 9000
+    },
+    {
+      "fingerprint": "sha256:c28793d543baf6c0723608f6f194d25352a2e89abe340a35025aec9bda254f56",
+      "language": "en",
+      "lineId": "l_2555b66844440f8e",
+      "role": "text",
+      "sourceOrder": 1,
+      "text": "open for your echo",
+      "timeMs": 11000
+    }
+  ],
+  "phrases": [
+    {
+      "blockIds": [
+        "b_main"
+      ],
+      "confidence": 0.84,
+      "explanation": "The two lines form one complete expression.",
+      "gloss": "waiting for an echo",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "minimal",
+          "namespace": "lang:en"
+        }
+      ],
+      "phraseId": "p_main",
+      "role": "minimal_phrase",
+      "sourceSegments": [
+        {
+          "end": 15,
+          "lineId": "l_dd6729d66a8bf6f4",
+          "start": 0,
+          "text": "I kept the door"
+        },
+        {
+          "end": 18,
+          "lineId": "l_2555b66844440f8e",
+          "start": 0,
+          "text": "open for your echo"
+        }
+      ],
+      "surface": "I kept the dooropen for your echo"
+    }
+  ],
+  "relations": [],
+  "schema": "sakurauta.lyrics-grammar-analysis",
+  "schemaVersion": 1,
+  "source": {
+    "lineCount": 2,
+    "lrcFile": "source.lrc",
+    "lrcProjectionHash": "sha256:fbd013480d5af6688444b5ee02d8fe7169f8a9387bb21aa420613f6a2c303580",
+    "songId": "Fixture - English Horizon",
+    "sourceLanguages": [
+      "en"
+    ]
+  },
+  "uncertainties": []
+}

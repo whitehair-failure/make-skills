@@ -1,0 +1,225 @@
+{
+  "blocks": [
+    {
+      "blockId": "b_sentence",
+      "confidence": 0.94,
+      "endTimeMs": 7000,
+      "labels": [
+        {
+          "key": "recollection",
+          "namespace": "discourse"
+        }
+      ],
+      "lineIds": [
+        "l_b9a7b78579cb568f",
+        "l_514ca07d16f17fd0",
+        "l_7420f4f661e24064",
+        "l_6886e9219b28383b",
+        "l_missing"
+      ],
+      "meaning": "你给我的那个小小约定，我至今仍记得。",
+      "register": "reflective",
+      "startTimeMs": 1000
+    },
+    {
+      "blockId": "b_memory",
+      "confidence": 0.86,
+      "endTimeMs": 5000,
+      "labels": [
+        {
+          "key": "continuative",
+          "namespace": "aspect"
+        }
+      ],
+      "lineIds": [
+        "l_7420f4f661e24064"
+      ],
+      "meaning": "记忆状态从过去持续到现在。",
+      "startTimeMs": 5000
+    }
+  ],
+  "grammarNotes": [
+    {
+      "confidence": 0.86,
+      "explanation": "「覚えている」表示记忆状态持续。",
+      "labels": [
+        {
+          "key": "te_iru_continuative",
+          "namespace": "lang:ja"
+        }
+      ],
+      "noteId": "g_te_iru",
+      "scope": {
+        "blockId": "b_missing",
+        "phraseId": "p_remember"
+      }
+    }
+  ],
+  "lines": [
+    {
+      "fingerprint": "sha256:dae84c24f232203e3b94c5e4003d00aba213e99e502d63f16b2215c116696644",
+      "language": "ja",
+      "lineId": "l_b9a7b78579cb568f",
+      "role": "text",
+      "sourceOrder": 0,
+      "text": "君がくれた",
+      "timeMs": 1000
+    },
+    {
+      "fingerprint": "sha256:5d719b27e9a9905177571d504990c78bc7aa7905be0897ebfca4d57f9e213f93",
+      "language": "ja",
+      "lineId": "l_514ca07d16f17fd0",
+      "role": "text",
+      "sourceOrder": 1,
+      "text": "小さな約束を",
+      "timeMs": 3000
+    },
+    {
+      "fingerprint": "sha256:4720420b4aee38e7311d7d079bd51846c89537ddf367d0c07c110347901d8473",
+      "language": "ja",
+      "lineId": "l_7420f4f661e24064",
+      "role": "text",
+      "sourceOrder": 2,
+      "text": "今でも覚えている",
+      "timeMs": 5000
+    },
+    {
+      "fingerprint": "sha256:dae84c24f232203e3b94c5e4003d00aba213e99e502d63f16b2215c116696644",
+      "language": "ja",
+      "lineId": "l_6886e9219b28383b",
+      "role": "text",
+      "sourceOrder": 3,
+      "text": "君がくれた",
+      "timeMs": 7000
+    }
+  ],
+  "phrases": [
+    {
+      "blockIds": [
+        "b_missing"
+      ],
+      "confidence": 0.91,
+      "explanation": "「君がくれた」修饰跨行出现的「小さな約束」。",
+      "gloss": "the little promise you gave me",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "relative_clause",
+          "namespace": "lang:ja"
+        }
+      ],
+      "phraseId": "p_promise",
+      "role": "object_noun_phrase",
+      "sourceSegments": [
+        {
+          "end": 5,
+          "lineId": "l_b9a7b78579cb568f",
+          "start": 0,
+          "text": "君がくれた"
+        },
+        {
+          "end": 5,
+          "lineId": "l_514ca07d16f17fd0",
+          "start": 0,
+          "text": "小さな約束"
+        }
+      ],
+      "surface": "君がくれた小さな約束"
+    },
+    {
+      "blockIds": [
+        "b_sentence",
+        "b_memory"
+      ],
+      "confidence": 0.88,
+      "explanation": "持续体表达记忆状态仍在延续。",
+      "gloss": "still remember",
+      "kind": "clause",
+      "labels": [
+        {
+          "key": "te_iru",
+          "namespace": "lang:ja"
+        }
+      ],
+      "phraseId": "p_remember",
+      "role": "predicate_clause",
+      "sourceSegments": [
+        {
+          "end": 8,
+          "lineId": "l_7420f4f661e24064",
+          "start": 0,
+          "text": "今でも覚えている"
+        }
+      ],
+      "surface": "今でも覚えている"
+    },
+    {
+      "blockIds": [
+        "b_sentence"
+      ],
+      "confidence": 0.83,
+      "explanation": "重复出现的短语与开头形成回环。",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "repetition",
+          "namespace": "discourse"
+        }
+      ],
+      "phraseId": "p_repeat",
+      "role": "repeated_noun_phrase",
+      "sourceSegments": [
+        {
+          "end": 5,
+          "lineId": "l_6886e9219b28383b",
+          "start": 0,
+          "text": "君がくれた"
+        }
+      ],
+      "surface": "君がくれた"
+    }
+  ],
+  "relations": [
+    {
+      "confidence": 0.87,
+      "explanation": "「覚えている」的对象是前面的约定。",
+      "fromPhraseId": "p_remember",
+      "labels": [
+        {
+          "key": "predicate_object",
+          "namespace": "syntax"
+        }
+      ],
+      "relationId": "r_object",
+      "toPhraseId": "p_promise",
+      "type": "governs"
+    }
+  ],
+  "schema": "sakurauta.lyrics-grammar-analysis",
+  "schemaVersion": 1,
+  "source": {
+    "lineCount": 4,
+    "lrcFile": "source.lrc",
+    "lrcProjectionHash": "sha256:739e7c6dea9460df9da216db818e872aac4baf54159eb30e64c1957dff18fabd",
+    "songId": "Fixture - Japanese Promise",
+    "sourceLanguages": [
+      "ja"
+    ]
+  },
+  "uncertainties": [
+    {
+      "alternatives": [
+        "我",
+        "说话者",
+        "未明示主体"
+      ],
+      "confidence": 0.7,
+      "kind": "ambiguity",
+      "message": "日语省略了主语。",
+      "scope": {
+        "blockId": "b_sentence"
+      },
+      "uncertaintyId": "u_subject"
+    }
+  ]
+}

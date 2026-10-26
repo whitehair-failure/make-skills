@@ -1,0 +1,511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sakurauta.app/schemas/lyrics-grammar-sidecar/v1.json",
+  "title": "SakuraUta Lyrics Grammar Analysis Sidecar",
+  "description": "A user-generated, read-only grammar analysis sidecar for a local LRC file. It never contains per-line translations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "schemaVersion",
+    "source",
+    "lines",
+    "blocks",
+    "phrases",
+    "relations",
+    "grammarNotes",
+    "uncertainties"
+  ],
+  "properties": {
+    "schema": {
+      "const": "sakurauta.lyrics-grammar-analysis"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lrcFile",
+        "songId",
+        "sourceLanguages",
+        "lineCount",
+        "lrcProjectionHash"
+      ],
+      "properties": {
+        "lrcFile": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "songId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceLanguages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$"
+          }
+        },
+        "lineCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "lrcProjectionHash": {
+          "$ref": "#/$defs/hash"
+        }
+      }
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/line"
+      }
+    },
+    "blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    },
+    "phrases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/phrase"
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation"
+      }
+    },
+    "grammarNotes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/grammarNote"
+      }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/uncertainty"
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{2,63}$"
+    },
+    "label": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "key"
+      ],
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9:-]{1,31}$"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "display": {
+          "type": "string",
+          "maxLength": 120
+        }
+      }
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lineId",
+        "sourceOrder",
+        "timeMs",
+        "text",
+        "fingerprint",
+        "role",
+        "language"
+      ],
+      "properties": {
+        "lineId": {
+          "$ref": "#/$defs/id"
+        },
+        "sourceOrder": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "timeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endTimeMs": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/hash"
+        },
+        "role": {
+          "const": "text"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$"
+        },
+        "languageSpans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/languageSpan"
+          }
+        }
+      }
+    },
+    "languageSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "language"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$"
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "lineId",
+        "start",
+        "end",
+        "text"
+      ],
+      "properties": {
+        "lineId": {
+          "$ref": "#/$defs/id"
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockId",
+        "lineIds",
+        "startTimeMs",
+        "endTimeMs",
+        "meaning",
+        "labels",
+        "confidence"
+      ],
+      "properties": {
+        "blockId": {
+          "$ref": "#/$defs/id"
+        },
+        "lineIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "startTimeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endTimeMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "register": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "phrase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phraseId",
+        "blockIds",
+        "kind",
+        "sourceSegments",
+        "surface",
+        "role",
+        "labels",
+        "explanation",
+        "confidence"
+      ],
+      "properties": {
+        "phraseId": {
+          "$ref": "#/$defs/id"
+        },
+        "blockIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "kind": {
+          "enum": [
+            "token",
+            "phrase",
+            "clause",
+            "sentence",
+            "discourse"
+          ]
+        },
+        "sourceSegments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/segment"
+          }
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gloss": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relationId",
+        "fromPhraseId",
+        "toPhraseId",
+        "type",
+        "labels",
+        "confidence"
+      ],
+      "properties": {
+        "relationId": {
+          "$ref": "#/$defs/id"
+        },
+        "fromPhraseId": {
+          "$ref": "#/$defs/id"
+        },
+        "toPhraseId": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "explanation": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "blockId"
+      ],
+      "properties": {
+        "blockId": {
+          "$ref": "#/$defs/id"
+        },
+        "phraseId": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "grammarNote": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "noteId",
+        "scope",
+        "explanation",
+        "labels",
+        "confidence"
+      ],
+      "properties": {
+        "noteId": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "explanation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/label"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uncertaintyId",
+        "scope",
+        "kind",
+        "message",
+        "alternatives"
+      ],
+      "properties": {
+        "uncertaintyId": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "kind": {
+          "enum": [
+            "ambiguity",
+            "translation",
+            "syntax",
+            "register",
+            "cultural",
+            "other"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}

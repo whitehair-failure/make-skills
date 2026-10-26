@@ -1,0 +1,174 @@
+{
+  "blocks": [
+    {
+      "blockId": "b_all_edge",
+      "confidence": 1.0,
+      "endTimeMs": 30000,
+      "labels": [
+        {
+          "key": "edge",
+          "namespace": "test"
+        }
+      ],
+      "lineIds": [
+        "l_f6960855204db522",
+        "l_e42cab7a3a0a1d06",
+        "l_382e4bdca7aa352e"
+      ],
+      "meaning": "Unicode 与重复行边界夹具。",
+      "startTimeMs": 10000
+    },
+    {
+      "blockId": "b_unicode",
+      "confidence": 1.0,
+      "endTimeMs": 10000,
+      "labels": [
+        {
+          "key": "codepoint",
+          "namespace": "unicode"
+        }
+      ],
+      "lineIds": [
+        "l_f6960855204db522"
+      ],
+      "meaning": "表情与组合字符按码点计数。",
+      "startTimeMs": 10000
+    }
+  ],
+  "grammarNotes": [
+    {
+      "confidence": 1.0,
+      "explanation": "该区间使用 Unicode 码点索引，而不是 UTF-16 单元。",
+      "labels": [
+        {
+          "key": "codepoint_span",
+          "namespace": "unicode"
+        }
+      ],
+      "noteId": "g_unicode",
+      "scope": {
+        "blockId": "b_unicode",
+        "phraseId": "p_unicode"
+      }
+    }
+  ],
+  "lines": [
+    {
+      "fingerprint": "sha256:886873aaf86f0c7d12993b8bf57a6facb1b185cc765e7ce37e652c189d00b101",
+      "language": "ja",
+      "languageSpans": [
+        {
+          "end": 1,
+          "language": "ja",
+          "start": 0
+        },
+        {
+          "end": 2,
+          "language": "en",
+          "start": 1
+        },
+        {
+          "end": 3,
+          "language": "ja",
+          "start": 2
+        }
+      ],
+      "lineId": "l_f6960855204db522",
+      "role": "text",
+      "sourceOrder": 0,
+      "text": "😀é",
+      "timeMs": 10000
+    },
+    {
+      "fingerprint": "sha256:4e42d0b0d8be98b0964228d1da4fce746e2e4b948cb9268ed6788f57ff52faaf",
+      "language": "ja",
+      "lineId": "l_e42cab7a3a0a1d06",
+      "role": "text",
+      "sourceOrder": 1,
+      "text": "same",
+      "timeMs": 20000
+    },
+    {
+      "fingerprint": "sha256:4e42d0b0d8be98b0964228d1da4fce746e2e4b948cb9268ed6788f57ff52faaf",
+      "language": "ja",
+      "lineId": "l_382e4bdca7aa352e",
+      "role": "text",
+      "sourceOrder": 2,
+      "text": "same",
+      "timeMs": 30000
+    }
+  ],
+  "phrases": [
+    {
+      "blockIds": [
+        "b_all_edge",
+        "b_unicode"
+      ],
+      "confidence": 1.0,
+      "explanation": "emoji 只占一个码点；组合字符同样按码点计。",
+      "kind": "token",
+      "labels": [
+        {
+          "key": "emoji",
+          "namespace": "unicode"
+        }
+      ],
+      "phraseId": "p_unicode",
+      "role": "emoji_token",
+      "sourceSegments": [
+        {
+          "end": 1,
+          "lineId": "l_f6960855204db522",
+          "start": 0,
+          "text": "😀"
+        }
+      ],
+      "surface": "😀"
+    },
+    {
+      "blockIds": [
+        "b_all_edge"
+      ],
+      "confidence": 1.0,
+      "explanation": "相同文本位于不同时间戳，因此引用可区分。",
+      "kind": "phrase",
+      "labels": [
+        {
+          "key": "duplicate",
+          "namespace": "test"
+        }
+      ],
+      "phraseId": "p_same",
+      "role": "duplicate_sequence",
+      "sourceSegments": [
+        {
+          "end": 4,
+          "lineId": "l_e42cab7a3a0a1d06",
+          "start": 0,
+          "text": "same"
+        },
+        {
+          "end": 4,
+          "lineId": "l_382e4bdca7aa352e",
+          "start": 0,
+          "text": "same"
+        }
+      ],
+      "surface": "samesame"
+    }
+  ],
+  "relations": [],
+  "schema": "sakurauta.lyrics-grammar-analysis",
+  "schemaVersion": 1,
+  "source": {
+    "lineCount": 3,
+    "lrcFile": "source.lrc",
+    "lrcProjectionHash": "sha256:6977e9ba92bf2a2076cb95d16e9414495319ed0b0038bef76ed077bf76e62125",
+    "songId": "Fixture - Unicode Edge",
+    "sourceLanguages": [
+      "ja",
+      "en"
+    ]
+  },
+  "uncertainties": []
+}
