@@ -2,80 +2,99 @@
 
 Reusable, user-invoked Skills maintained outside the SakuraUta application.
 
-## Lyrics Grammar Sidecar
+## SakuraUta Lyrics Workflow
 
-`skills/lyrics-grammar-sidecar` creates a block-level grammar analysis JSON
-beside a local LRC. It is a user-triggered desktop/external workflow, not a
-SakuraUta runtime feature: generation runs outside the app and needs no
-database, `window.okashi`, app API, or model SDK dependency.
+`skills/sakurauta-lyrics-workflow` is the **main entry point**. It coordinates
+two child Skills:
 
-Discovery:
+1. `skills/lyrics-translation-handoff` delegates to the unchanged
+   `skills/lyrics-translator` and freezes the accepted bilingual LRC.
+2. `skills/lyrics-grammar-analysis` analyses the frozen lyrics in a fresh
+   transcript and writes only a semantic draft.
 
-- Skill instructions: `skills/lyrics-grammar-sidecar/SKILL.md`
-- Semantic draft contract: `skills/lyrics-grammar-sidecar/references/draft-contract.md`
+The deterministic layer remains
+`skills/lyrics-grammar-sidecar`. It owns the JSON Schema, projection, freeze
+verification, reference/Unicode validation, isolation proof, and atomic final
+write. The main Skill does not reimplement those rules.
+
+### Discovery
+
+- Main workflow: `skills/sakurauta-lyrics-workflow/SKILL.md`
+- Translation child: `skills/lyrics-translation-handoff/SKILL.md`
+- Grammar child: `skills/lyrics-grammar-analysis/SKILL.md`
+- Deterministic generator: `skills/lyrics-grammar-sidecar/SKILL.md`
+- Draft contract: `skills/lyrics-grammar-sidecar/references/draft-contract.md`
 - Sidecar v1 schema: `schema/v1/lyrics-grammar-analysis.schema.json`
 - Fixtures: `skills/lyrics-grammar-sidecar/fixtures/`
 
-The translator remains the existing `skills/lyrics-translator` Skill and is
-treated as a black box. This new workflow adds only the separate grammar
-analysis phase and deterministic validation/finalization.
+The three top-level Skills are separate directories so a Harness can discover
+and delegate them independently. Reading a child `SKILL.md` does not create a
+separate context.
 
 ### Invocation
 
 Run from the `make-skills` repository root:
 
 ```powershell
-$Skill = "skills\lyrics-grammar-sidecar"
-python "$Skill\scripts\project_source.py" "C:\Music\Song.lrc" `
-  --song-id "<SakuraUta songId>"
+$Main = "skills\sakurauta-lyrics-workflow"
+$Work = "C:\Music\Song.grammar-work"
 
-# Translate with skills\lyrics-translator, then freeze the accepted file.
-python "$Skill\scripts\verify_translation.py" `
-  "C:\Music\Song.grammar-work\source-projection.json" `
-  "C:\Music\Song.grammar-work\accepted-translated.lrc" `
-  --workdir "C:\Music\Song.grammar-work"
+python "$Main\scripts\preflight.py" "C:\Music\Song.lrc" `
+  --target-language zh `
+  --song-id "<SakuraUta songId>" `
+  --workdir $Work
 
-# Record evidence from a fresh, non-forked analysis transcript.
-python "$Skill\scripts\record_isolation.py" `
-  "C:\Music\Song.grammar-work\source-projection.json" `
-  --method codex-exec `
-  --child-transcript-id "<analysis-id>" `
-  --parent-transcript-id "<parent-id>" `
-  --output "C:\Music\Song.grammar-work\isolation-proof.json"
+# Dispatch this task to a fresh translation child.
+# It reads skills\lyrics-translation-handoff\SKILL.md and uses
+# skills\lyrics-translator as a black box.
 
-# The isolated analyzer writes semantic-draft.json. Only this writes Song.json.
-python "$Skill\scripts\finalize.py" "C:\Music\Song.lrc" `
-  --projection "C:\Music\Song.grammar-work\source-projection.json" `
-  --workdir "C:\Music\Song.grammar-work"
+python "$Main\scripts\check_phase.py" $Work --phase frozen
 
-python "$Skill\scripts\validate_all.py" "C:\Music\Song.lrc" `
-  "C:\Music\Song.json" `
-  --projection "C:\Music\Song.grammar-work\source-projection.json" `
-  --workdir "C:\Music\Song.grammar-work"
+# Dispatch this task to a different fresh child.
+# It reads skills\lyrics-grammar-analysis\SKILL.md and the existing
+# draft contract, then writes semantic-draft.json and isolation-proof.json.
+
+python "$Main\scripts\check_phase.py" $Work --phase drafted
+
+# Only the deterministic finalizer writes the production JSON.
+python "skills\lyrics-grammar-sidecar\scripts\finalize.py" `
+  "C:\Music\Song.lrc" `
+  --projection "$Work\source-projection.json" `
+  --workdir $Work
+
+python "$Main\scripts\check_phase.py" $Work `
+  --phase finalized `
+  --sidecar "C:\Music\Song.json"
 ```
 
 Only local `.lrc` input is accepted. The generated file is always
 `dirname(lrc) / basename(lrc, ".lrc") + ".json"`. Existing differing output is
 preserved unless the user explicitly passes `--replace`.
 
-Translation and grammar analysis are distinct acceptance gates. The accepted
-bilingual LRC is frozen by SHA-256 before analysis. If a child agent or other
-separate-transcript harness is unavailable, formal generation must stop with
-an explicit error rather than falling back to same-context inline output.
+### Isolation Contract
+
+- A Skill load is not a child context.
+- Use a native non-forked sub-agent or an independent CLI session.
+- Pass each child only the phase Skill path and input/output contract.
+- A shared workspace is allowed; the frozen translation hash catches writes.
+- If no separate context exists, stop with `isolation-unavailable`. Do not run
+  translation or grammar inline as a fallback.
 
 ### Verification
 
 Python 3.10+ standard library only:
 
 ```powershell
+python skills\sakurauta-lyrics-workflow\scripts\selftest.py
 python skills\lyrics-grammar-sidecar\scripts\selftest.py
 git diff --exit-code -- skills/lyrics-translator
 ```
 
-The suite covers ja/ko/zh/en fixtures, cross-line blocks and phrases,
+The generator suite covers ja/ko/zh/en fixtures, cross-line blocks and phrases,
 overlapping blocks, duplicate lines, same-timestamp bilingual rows, Unicode
 code-point spans, stale projections, invalid references, HTML-looking text,
 translation freeze tampering, schema fail-closed behavior, and deterministic
-atomic finalization. `fixtures/golden-vectors.json` pins the App's frozen
-lineId, fingerprint, and projection-hash formulas for repeated text,
-same-timestamp bilingual input, and emoji/combining-character spans.
+atomic finalization. The orchestration suite covers preflight rejection,
+phase checks, frozen translation tampering, child Skill boundaries, and the
+no-inline-fallback rule. `fixtures/golden-vectors.json` pins the App's frozen
+lineId, fingerprint, and projection-hash formulas.
