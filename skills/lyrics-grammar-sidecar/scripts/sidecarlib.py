@@ -95,15 +95,16 @@ class LrcRow:
     raw: str
 
 
-def repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
-
-
 def default_schema_path() -> Path:
     override = os.environ.get("LYRICS_GRAMMAR_SCHEMA")
     if override:
         return Path(override).expanduser().resolve()
-    return repo_root() / "schema" / "v1" / "lyrics-grammar-analysis.schema.json"
+    return (
+        Path(__file__).resolve().parents[1]
+        / "schema"
+        / "v1"
+        / "lyrics-grammar-analysis.schema.json"
+    )
 
 
 def canonical_json(value: Any) -> str:

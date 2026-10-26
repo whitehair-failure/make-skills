@@ -1,7 +1,8 @@
 # Semantic Draft Contract v1
 
 `semantic-draft.json` is input to the deterministic finalizer, not a
-production artifact. Use the schema at `../../schema/v1/lyrics-grammar-analysis.schema.json`.
+production artifact. Use the schema at
+`../schema/v1/lyrics-grammar-analysis.schema.json`.
 Final-sidecar source fields mirror `packages/core/src/lyrics-grammar.ts`:
 the App validates `source.songId`, `source.lineCount`, and
 `source.lrcProjectionHash` against its canonical LRC projection.
