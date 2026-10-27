@@ -35,6 +35,9 @@
       "startTimeMs": 10000
     }
   ],
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  },
   "grammarNotes": [
     {
       "confidence": 1.0,

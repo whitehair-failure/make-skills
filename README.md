@@ -96,12 +96,14 @@ Finalize and verify:
 ```powershell
 python "$Grammar\scripts\finalize.py" "C:\Music\Song.lrc" `
   --projection "$Work\source-projection.json" `
-  --workdir $Work
+  --workdir $Work `
+  --learner-language "<target language>"
 
 python "$Grammar\scripts\validate_all.py" `
   "C:\Music\Song.lrc" "C:\Music\Song.json" `
   --projection "$Work\source-projection.json" `
-  --workdir $Work
+  --workdir $Work `
+  --learner-language "<target language>"
 ```
 
 Only local `.lrc` input is accepted. The generated file is always
@@ -116,6 +118,14 @@ preserved unless the user explicitly passes `--replace`.
   `lyrics-translator` directly.
 - The grammar child reads the frozen translation and source projection but
   must not write the final JSON.
+- Both child tasks receive the same target language. All learner-facing prose
+  (`meaning`, `gloss`, `explanation`, notes, uncertainty text, alternatives)
+  must use it; stable machine identifiers may remain English.
+- New sidecars record it in `extensions.learnerLanguage`. A mismatched or
+  English-only gloss under a Chinese/Japanese/Korean target fails closed.
+- The deterministic finalizer and validator require `--learner-language`.
+  Existing sidecars without that extension remain readable by SakuraUta;
+  re-run only the grammar analysis when upgrading an old file.
 - If no separate context exists, stop with `isolation-unavailable`. Do not run
   translation or grammar inline as a fallback.
 

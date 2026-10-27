@@ -33,6 +33,10 @@ def main() -> int:
         "--expected-lrc-name",
         help="Require source.lrcFile to equal this sibling basename",
     )
+    parser.add_argument(
+        "--learner-language",
+        help="Validate learner-facing prose against this language.",
+    )
     parser.add_argument("--report", type=Path, help="Write a validation-report.json")
     args = parser.parse_args()
 
@@ -61,6 +65,7 @@ def main() -> int:
                 args.expected_lrc_name
                 or (projection.get("lrcFile") if projection is not None else None)
             ),
+            learner_language=args.learner_language,
         )
         report = validation_report(
             issues,

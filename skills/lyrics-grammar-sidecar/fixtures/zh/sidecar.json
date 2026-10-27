@@ -62,7 +62,7 @@
       ],
       "confidence": 0.84,
       "explanation": "两行共同组成一个完整表达。",
-      "gloss": "a letter",
+      "gloss": "一封信",
       "kind": "phrase",
       "labels": [
         {
@@ -90,6 +90,9 @@
     }
   ],
   "relations": [],
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  },
   "schema": "sakurauta.lyrics-grammar-analysis",
   "schemaVersion": 1,
   "source": {

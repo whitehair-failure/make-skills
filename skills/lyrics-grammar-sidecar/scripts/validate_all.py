@@ -36,6 +36,11 @@ def main() -> int:
     parser.add_argument(
         "--report", type=Path, help="Optional validation-report.json destination"
     )
+    parser.add_argument(
+        "--learner-language",
+        required=True,
+        help="Language for learner-facing prose, e.g. zh-CN, ja, en.",
+    )
     args = parser.parse_args()
 
     try:
@@ -55,6 +60,7 @@ def main() -> int:
             projection=projection,
             expected_lrc_file=projection.get("lrcFile", args.lrc.name),
             require_projection=True,
+            learner_language=args.learner_language,
         )
         issues = [*source_issues, *freeze_issues, *sidecar_issues]
         report = validation_report(

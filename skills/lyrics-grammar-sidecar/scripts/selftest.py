@@ -120,8 +120,8 @@ def build_draft(
                 "surface": "".join(line["text"] for line in lines),
                 "role": "fixture_phrase",
                 "labels": labels(f"lang:{language}", "fixture"),
-                "explanation": "Testing a structured grammar explanation.",
-                "gloss": "fixture meaning",
+                "explanation": "用于测试的结构化语法解释。",
+                "gloss": "夹具释义",
                 "confidence": 0.8,
             }
         ]
@@ -133,7 +133,7 @@ def build_draft(
                     "blockId": blocks[0]["blockId"],
                     "phraseId": phrases[0]["phraseId"],
                 },
-                "explanation": "A namespaced grammar note.",
+                "explanation": "带命名空间的语法说明。",
                 "labels": labels("syntax", "fixture"),
                 "confidence": 0.8,
             }
@@ -154,6 +154,7 @@ def build_draft(
         "relations": [],
         "grammarNotes": notes,
         "uncertainties": [],
+        "extensions": {"learnerLanguage": "zh-CN"},
     }
 
 
@@ -680,6 +681,7 @@ class GrammarSidecarTests(unittest.TestCase):
                 isolation_path=isolation_path,
                 workdir=work,
                 report_path=work / "validation-report.json",
+                learner_language="zh-CN",
             )
             self.assertTrue(changed)
             self.assertEqual(base / "source.json", output)
@@ -696,6 +698,7 @@ class GrammarSidecarTests(unittest.TestCase):
                 isolation_path=isolation_path,
                 workdir=work,
                 report_path=work / "validation-report.json",
+                learner_language="zh-CN",
             )
             self.assertFalse(changed_again)
             self.assertEqual(before, output.read_bytes())
@@ -739,9 +742,50 @@ class GrammarSidecarTests(unittest.TestCase):
                     draft_path,
                     isolation_path=isolation_path,
                     workdir=work,
+                    learner_language="zh-CN",
                 )
             self.assertEqual("output_exists", context.exception.code)
             self.assertEqual('{"different":true}\n', existing.read_text(encoding="utf-8"))
+
+    def test_finalizer_rejects_wrong_learner_language(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "source.lrc"
+            source.write_bytes((FIXTURES / "ja" / "source.lrc").read_bytes())
+            projection = source_projection_from_lrc(source, DEFAULT_SONG_ID)
+            projection_path = base / "source-projection.json"
+            write_json_atomic(projection_path, projection)
+            work = base / "source.grammar-work"
+            work.mkdir()
+            translated, _, issues = write_accepted_translation(
+                projection, FIXTURES / "ja" / "translated.lrc", work
+            )
+            self.assertEqual([], issues)
+            draft = copy.deepcopy(load_json(FIXTURES / "ja" / "sidecar.json"))
+            draft["extensions"]["learnerLanguage"] = "en"
+            draft_path = work / "semantic-draft.json"
+            write_json_atomic(draft_path, draft)
+            isolation_path = work / "isolation-proof.json"
+            write_json_atomic(
+                isolation_path,
+                build_isolation_proof(
+                    projection,
+                    "native-subagent",
+                    child_transcript_id="child-language",
+                ),
+            )
+            with self.assertRaises(SidecarError) as context:
+                finalize_sidecar(
+                    source,
+                    projection_path,
+                    translated,
+                    work / "translation-manifest.json",
+                    draft_path,
+                    isolation_path=isolation_path,
+                    workdir=work,
+                    learner_language="zh-CN",
+                )
+            self.assertEqual("learner_language_mismatch", context.exception.code)
 
     def test_translation_manifest_rejects_changed_source_text(self) -> None:
         projection = source_projection_from_lrc(
@@ -887,6 +931,67 @@ class GrammarSidecarTests(unittest.TestCase):
         original = pretty_json(draft)
         validate_sidecar_semantics(draft, projection, projection["lrcFile"])
         self.assertEqual(original, pretty_json(draft))
+
+    def test_learner_language_contract(self) -> None:
+        projection = source_projection_from_lrc(
+            FIXTURES / "ja" / "source.lrc", DEFAULT_SONG_ID
+        )
+        draft = build_draft(projection)
+        self.assertEqual([], validate_sidecar_document(
+            draft, projection, projection["lrcFile"], learner_language="zh-CN"
+        ))
+
+        mismatched = copy.deepcopy(draft)
+        mismatched["extensions"]["learnerLanguage"] = "en"
+        self.assert_issue(
+            validate_sidecar_document(
+                mismatched, projection, projection["lrcFile"], learner_language="zh-CN"
+            ),
+            "learner_language_mismatch",
+        )
+
+        missing = copy.deepcopy(draft)
+        missing.pop("extensions")
+        self.assert_issue(
+            validate_sidecar_document(
+                missing, projection, projection["lrcFile"], learner_language="zh-CN"
+            ),
+            "missing_learner_language",
+        )
+
+        english_gloss = copy.deepcopy(draft)
+        english_gloss["phrases"][0]["gloss"] = "the little promise you gave me"
+        self.assert_issue(
+            validate_sidecar_document(
+                english_gloss, projection, projection["lrcFile"], learner_language="zh-CN"
+            ),
+            "learner_text_not_in_target_language",
+        )
+
+        english_target = copy.deepcopy(english_gloss)
+        english_target["extensions"]["learnerLanguage"] = "en"
+        english_target["blocks"][0]["meaning"] = "A complete learning meaning."
+        english_target["phrases"][0]["explanation"] = "A complete explanation."
+        english_target["grammarNotes"][0]["explanation"] = "A grammar note."
+        self.assertEqual([], validate_sidecar_document(
+            english_target, projection, projection["lrcFile"], learner_language="en"
+        ))
+
+        legacy = copy.deepcopy(draft)
+        legacy.pop("extensions")
+        self.assertEqual([], validate_sidecar_document(legacy, projection, projection["lrcFile"]))
+
+        source_surface_gloss = copy.deepcopy(draft)
+        source_surface_gloss["phrases"][0]["gloss"] = source_surface_gloss["phrases"][0]["surface"]
+        issues = validate_sidecar_document(
+            source_surface_gloss,
+            projection,
+            projection["lrcFile"],
+            learner_language="zh-CN",
+        )
+        self.assertFalse(
+            any(issue.code == "learner_text_not_in_target_language" for issue in issues)
+        )
 
 
 if __name__ == "__main__":

@@ -99,7 +99,7 @@
       ],
       "confidence": 0.91,
       "explanation": "「君がくれた」修饰跨行出现的「小さな約束」。",
-      "gloss": "the little promise you gave me",
+      "gloss": "你给我的那个小小约定",
       "kind": "phrase",
       "labels": [
         {
@@ -132,7 +132,7 @@
       ],
       "confidence": 0.88,
       "explanation": "持续体表达记忆状态仍在延续。",
-      "gloss": "still remember",
+      "gloss": "至今仍记得",
       "kind": "clause",
       "labels": [
         {
@@ -204,6 +204,9 @@
     "sourceLanguages": [
       "ja"
     ]
+  },
+  "extensions": {
+    "learnerLanguage": "zh-CN"
   },
   "uncertainties": [
     {

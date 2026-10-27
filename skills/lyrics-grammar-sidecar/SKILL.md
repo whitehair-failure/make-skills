@@ -23,6 +23,21 @@ Read [references/draft-contract.md](references/draft-contract.md) and write
 only `<workdir>/semantic-draft.json`. Do not copy per-line translations into
 the draft. Do not write the sibling `<song>.json`.
 
+All learner-facing free text must use the requested learner language:
+`meaning`, `gloss`, `explanation`, `message`, `notes`, and `alternatives`.
+Stable identifiers (`role`, `register`, `relation.type`, label namespace/key)
+may remain English. Record the language in:
+
+```json
+{
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  }
+}
+```
+
+Do not leave `gloss` in English merely because earlier examples did.
+
 Record the proof:
 
 ```powershell
@@ -73,7 +88,8 @@ Only the deterministic finalizer writes the production sidecar:
 ```powershell
 python scripts\finalize.py "<song.lrc>" `
   --projection "<workdir>\source-projection.json" `
-  --workdir "<workdir>"
+  --workdir "<workdir>" `
+  --learner-language "<learner language>"
 ```
 
 Then run the full integrity check:
@@ -82,7 +98,8 @@ Then run the full integrity check:
 python scripts\validate_all.py `
   "<song.lrc>" "<song.json>" `
   --projection "<workdir>\source-projection.json" `
-  --workdir "<workdir>"
+  --workdir "<workdir>" `
+  --learner-language "<learner language>"
 ```
 
 The output is always `dirname(lrc) / basename(lrc, ".lrc") + ".json"`.

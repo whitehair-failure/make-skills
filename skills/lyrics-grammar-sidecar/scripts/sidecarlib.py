@@ -32,6 +32,8 @@ MANIFEST_VERSION = 1
 ISOLATION_VERSION = 1
 ISOLATION_METHODS = {"native-subagent", "codex-exec", "documented-harness"}
 ISOLATION_CONTEXT = "non-forked-transcript"
+LEARNER_LANGUAGE_EXTENSION = "learnerLanguage"
+CJK_LEARNER_LANGUAGES = {"zh", "ja", "ko", "yue"}
 
 HASH_PATTERN = re.compile(r"\Asha256:[0-9a-f]{64}\Z")
 ID_PATTERN = re.compile(r"\A[a-z][a-z0-9_-]{2,63}\Z")
@@ -1992,6 +1994,7 @@ def validate_sidecar_document(
     expected_lrc_file: str | None = None,
     schema_path: Path | None = None,
     require_projection: bool = False,
+    learner_language: str | None = None,
 ) -> list[Issue]:
     schema = load_schema(schema_path)
     issues = validate_schema_instance(document, schema)
@@ -2014,6 +2017,108 @@ def validate_sidecar_document(
                     "missing_projection_hash",
                     "$.source.lrcProjectionHash",
                     "The sidecar must carry a projection hash.",
+                )
+            )
+    if learner_language is not None:
+        issues.extend(validate_learner_language(document, learner_language))
+    return issues
+
+
+def learner_language_of(document: Any) -> str | None:
+    if not isinstance(document, dict):
+        return None
+    extensions = document.get("extensions")
+    if not isinstance(extensions, dict):
+        return None
+    value = extensions.get(LEARNER_LANGUAGE_EXTENSION)
+    return value.strip().lower() if isinstance(value, str) and value.strip() else None
+
+
+def _is_ascii_prose(value: str) -> bool:
+    letters = [char for char in value if char.isalpha()]
+    return bool(letters) and all(ord(char) < 128 for char in letters)
+
+
+def _has_cjk(value: str) -> bool:
+    return any(
+        "\u3400" <= char <= "\u9fff"
+        or "\u3040" <= char <= "\u30ff"
+        or "\uac00" <= char <= "\ud7af"
+        for char in value
+    )
+
+
+def _learner_text_fields(
+    document: dict[str, Any],
+) -> Iterable[tuple[str, str, str, str | None]]:
+    for collection in ("blocks", "phrases", "relations", "grammarNotes", "uncertainties"):
+        items = document.get(collection)
+        if not isinstance(items, list):
+            continue
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                continue
+            surface = item.get("surface")
+            surface_text = surface if isinstance(surface, str) else None
+            for key in ("meaning", "gloss", "explanation", "message", "notes"):
+                value = item.get(key)
+                if isinstance(value, str) and value.strip():
+                    yield f"$.{collection}[{index}].{key}", value, key, surface_text
+            alternatives = item.get("alternatives")
+            if isinstance(alternatives, list):
+                for alternative_index, value in enumerate(alternatives):
+                    if isinstance(value, str) and value.strip():
+                        yield (
+                            f"$.{collection}[{index}].alternatives[{alternative_index}]",
+                            value,
+                            "alternatives",
+                            surface_text,
+                        )
+
+
+def validate_learner_language(
+    document: Any, expected_language: str
+) -> list[Issue]:
+    expected = expected_language.strip().lower()
+    if not expected:
+        return [Issue("missing_learner_language", "$", "Expected a learner language.")]
+    actual = learner_language_of(document)
+    if actual is None:
+        return [
+            Issue(
+                "missing_learner_language",
+                "$.extensions.learnerLanguage",
+                "New sidecars must declare extensions.learnerLanguage.",
+            )
+        ]
+    if actual != expected:
+        return [
+            Issue(
+                "learner_language_mismatch",
+                "$.extensions.learnerLanguage",
+                f"Expected learner language {expected}, got {actual}.",
+            )
+        ]
+
+    primary = expected.split("-", 1)[0]
+    if primary not in CJK_LEARNER_LANGUAGES:
+        return []
+
+    issues: list[Issue] = []
+    for path, text, key, surface in _learner_text_fields(document):
+        if key == "gloss" and surface is not None and text.strip() == surface.strip():
+            continue
+        minimum_length = 1 if key == "gloss" else 12
+        if (
+            len(text) >= minimum_length
+            and _is_ascii_prose(text)
+            and not _has_cjk(text)
+        ):
+            issues.append(
+                Issue(
+                    "learner_text_not_in_target_language",
+                    path,
+                    f"Learner-facing prose must use {expected}, not English-only text.",
                 )
             )
     return issues
@@ -2164,6 +2269,7 @@ def finalize_sidecar(
     workdir: Path | None = None,
     report_path: Path | None = None,
     replace: bool = False,
+    learner_language: str | None = None,
 ) -> tuple[Path, bool]:
     projection = load_projection(projection_path)
     translated_lrc = ensure_local_lrc(translated_lrc_path)
@@ -2247,6 +2353,7 @@ def finalize_sidecar(
         draft,
         projection=projection,
         expected_lrc_file=projection.get("lrcFile"),
+        learner_language=learner_language,
     )
     if issues:
         if report_path is not None:
@@ -2268,6 +2375,7 @@ def finalize_sidecar(
         normalized,
         projection=projection,
         expected_lrc_file=projection.get("lrcFile"),
+        learner_language=learner_language,
     )
     if normalized_issues:
         if report_path is not None:

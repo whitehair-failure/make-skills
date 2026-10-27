@@ -55,7 +55,23 @@ the frozen file.
 
 ## Phase 2: Analyse
 
-4. Record the real child identity:
+4. Give the grammar child the same target language used in Phase 1. Require
+   every learner-facing field to use that language: block `meaning`, phrase
+   `gloss` and `explanation`, relation/note explanations, uncertainty text and
+   alternatives. Stable identifiers such as `role`, `register`,
+   `relation.type`, and label namespace/key may remain English. Require:
+
+```json
+{
+  "extensions": {
+    "learnerLanguage": "<target language>"
+  }
+}
+```
+
+Do not accept an English gloss merely because the field is named `gloss`.
+
+5. Record the real child identity:
 
 ```powershell
 python <grammar-skill>\scripts\record_isolation.py `
@@ -68,31 +84,33 @@ python <grammar-skill>\scripts\record_isolation.py `
 
 Use the method and IDs that actually apply. Never invent a child ID.
 
-5. Dispatch a different fresh child. Tell it to read and follow
+6. Dispatch a different fresh child. Tell it to read and follow
    `<grammar-skill>\SKILL.md` and its draft contract. It reads the original
    LRC, source projection, and frozen `translated.lrc`, then writes only
    `semantic-draft.json`. It must not edit inputs or write `<song>.json`.
 
-6. If analysis fails, rerun only the analysis child with a fresh transcript.
+7. If analysis fails, rerun only the analysis child with a fresh transcript.
    Keep the accepted translation frozen.
 
 ## Phase 3: Finalize
 
-7. Run the deterministic finalizer:
+8. Run the deterministic finalizer with the same learner language:
 
 ```powershell
 python <grammar-skill>\scripts\finalize.py "<song.lrc>" `
   --projection "<workdir>\source-projection.json" `
-  --workdir "<workdir>"
+  --workdir "<workdir>" `
+  --learner-language "<target language>"
 ```
 
-8. Validate the result:
+9. Validate the result with the same learner language:
 
 ```powershell
 python <grammar-skill>\scripts\validate_all.py `
   "<song.lrc>" "<song.json>" `
   --projection "<workdir>\source-projection.json" `
-  --workdir "<workdir>"
+  --workdir "<workdir>" `
+  --learner-language "<target language>"
 ```
 
 Report the final sidecar path and the validation result. If validation fails,

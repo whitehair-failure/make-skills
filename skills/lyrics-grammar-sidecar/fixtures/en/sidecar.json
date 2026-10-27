@@ -18,6 +18,9 @@
       "startTimeMs": 9000
     }
   ],
+  "extensions": {
+    "learnerLanguage": "en"
+  },
   "grammarNotes": [
     {
       "confidence": 0.82,

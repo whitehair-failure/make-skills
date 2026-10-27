@@ -62,7 +62,7 @@
       ],
       "confidence": 0.84,
       "explanation": "두 줄이 하나의 문장을 이룹니다.",
-      "gloss": "a short letter",
+      "gloss": "一封短短的信",
       "kind": "phrase",
       "labels": [
         {
@@ -90,6 +90,9 @@
     }
   ],
   "relations": [],
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  },
   "schema": "sakurauta.lyrics-grammar-analysis",
   "schemaVersion": 1,
   "source": {

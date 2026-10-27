@@ -51,6 +51,14 @@ def main() -> int:
     parser.add_argument(
         "--replace", action="store_true", help="Replace an existing differing sidecar"
     )
+    parser.add_argument(
+        "--learner-language",
+        required=True,
+        help=(
+            "Language for learner-facing prose and extensions.learnerLanguage, "
+            "e.g. zh-CN, ja, en."
+        ),
+    )
     args = parser.parse_args()
 
     workdir = args.workdir.expanduser().resolve()
@@ -108,6 +116,7 @@ def main() -> int:
             workdir=workdir,
             report_path=report_path,
             replace=args.replace,
+            learner_language=args.learner_language,
         )
     except SidecarError as exc:
         print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)

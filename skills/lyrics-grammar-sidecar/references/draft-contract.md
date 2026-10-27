@@ -33,6 +33,24 @@ the App validates `source.songId`, `source.lineCount`, and
 translation-bearing fields by name and HTML-looking text anywhere in the
 document.
 
+## Learner Language
+
+New sidecars must declare the language used for learner-facing prose:
+
+```json
+{
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  }
+}
+```
+
+All of `meaning`, `gloss`, `explanation`, `message`, `notes`, and
+`alternatives` must use that language. Stable identifiers (`role`,
+`register`, `relation.type`, label namespace/key) may remain English. A
+`gloss` is learner-facing prose, not a machine identifier; an English gloss is
+valid only when the requested learner language is English.
+
 ## Source Lines
 
 Copy each projected line, and add:
@@ -109,8 +127,8 @@ chunking.
   "labels": [
     {"namespace": "lang:ja", "key": "relative_clause"}
   ],
-  "explanation": "The first line modifies the noun phrase beginning on the next line.",
-  "gloss": "the little promise you gave me",
+  "explanation": "第一行修饰下一行开头的名词短语。",
+  "gloss": "你给我的那个小小约定",
   "confidence": 0.9
 }
 ```
@@ -132,7 +150,7 @@ segment line must belong to at least one block named in `blockIds`.
   "labels": [
     {"namespace": "syntax", "key": "predicate_object"}
   ],
-  "explanation": "The predicate governs the preceding noun phrase.",
+  "explanation": "谓语支配前面的名词短语。",
   "confidence": 0.86
 }
 ```
@@ -150,7 +168,7 @@ Both use a scope:
     "blockId": "b_promise",
     "phraseId": "p_remember"
   },
-  "explanation": "The continuative aspect marks an ongoing state.",
+  "explanation": "持续体表示状态仍在延续。",
   "labels": [
     {"namespace": "lang:ja", "key": "te_iru_continuative"}
   ],
@@ -180,3 +198,5 @@ must be a member of that block.
 - Every string is UTF-8 and may contain emoji or combining characters.
 - The sidecar has no per-line translation fields. Translation remains in the
   accepted bilingual LRC.
+- For newly generated sidecars, `extensions.learnerLanguage` is required and
+  must equal the workflow target language.
