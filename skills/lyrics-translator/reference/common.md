@@ -231,11 +231,13 @@ Re-read the draft as a critic, not as its author. For each semantic block, run a
 After the quality check passes:
 
 1. Run `lrc_merge.py` to inject translations back into the original `.lrc`:
+   ```powershell
+   python <skill-root>/scripts/lrc_merge.py <original.lrc> [<input.tmp.txt>]
+   # Batch merge is also supported:
+   python <skill-root>/scripts/lrc_merge.py <file1.lrc> <file2.lrc> ...
    ```
-   python <skill-root>/scripts/lrc_merge.py <original.lrc> <input.tmp.txt>
-   ```
-2. Confirm the script reports success and the temp file is deleted.
-3. Spot-check the output `.lrc`: open it and verify a few source/translation pairs have correct matching timestamps and are properly interleaved.
+2. Confirm the script reports `[OK]` status. The script deterministically verifies timestamp syntax, matching timestamps between interleaved pairs, metadata immunity, and cleans up the temporary file automatically.
+3. Do NOT manually re-read the merged `.lrc` file — the script's exit code 0 and `[OK]` output provide complete proof of structural validity, saving context tokens and avoiding redundant tool calls.
 
 ---
 

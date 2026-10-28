@@ -82,6 +82,12 @@ For **full polish**: re-run Steps 5–6 of common.md (Refine + Quality Check) on
 ## Commands
 
 ```powershell
-python <skill-root>/scripts/lrc_strip.py <input.lrc> <input.tmp.txt>
-python <skill-root>/scripts/lrc_merge.py <input.lrc> <input.tmp.txt>
+# Strip timestamps (single file, batch files, or stdout):
+python <skill-root>/scripts/lrc_strip.py <input.lrc> [<output.tmp.txt>]
+python <skill-root>/scripts/lrc_strip.py <input1.lrc> <input2.lrc> ...
+python <skill-root>/scripts/lrc_strip.py --print <input.lrc>
+
+# Merge translations back & verify deterministically (single or batch):
+python <skill-root>/scripts/lrc_merge.py <original.lrc> [<translated.tmp.txt>]
+python <skill-root>/scripts/lrc_merge.py <original1.lrc> <original2.lrc> ...
 ```
