@@ -5,3 +5,4 @@ __pycache__/
 *.py[cod]
 *.grammar-work/
 .agents/
+node_modules/
