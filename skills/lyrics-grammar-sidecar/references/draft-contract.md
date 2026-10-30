@@ -1,13 +1,8 @@
 # Semantic Draft Contract v2
 
-`semantic-draft.json` is the grammar-analysis child's only authored artifact.
-It is not a production sidecar. Use
-`../schema/v2/lyrics-grammar-analysis.schema.json`; v1 is unsupported.
+`semantic-draft.json` is the grammar-analysis child's only authored artifact. It is not a production sidecar. Use `../schema/v2/lyrics-grammar-analysis.schema.json`; v1 is unsupported.
 
-The draft must be based on the original LRC and the accepted, frozen
-`translated.lrc`. The deterministic pipeline normalizes projected source
-fields, discovers exact repetition candidates, creates
-`analysis-candidate.json`, and later requires an independent semantic audit.
+The draft must be based on the original LRC and the accepted, frozen `translated.lrc`. The deterministic pipeline normalizes projected source fields, discovers exact repetition candidates, creates `analysis-candidate.json`, and later requires an independent semantic audit.
 
 ## Pipeline Boundary
 
@@ -24,9 +19,7 @@ semantic-draft.json
   -> sibling <song>.json
 ```
 
-The grammar child may not invent, merge, shorten, lengthen, or omit a
-repetition candidate. If the draft fails preparation, revise the semantic
-draft in a fresh grammar child; do not edit the frozen translation.
+The grammar child may not invent, merge, shorten, lengthen, or omit a repetition candidate. If the draft fails preparation, revise the semantic draft in a fresh grammar child; do not edit the frozen translation.
 
 ## Top Level
 
@@ -55,16 +48,13 @@ draft in a fresh grammar child; do not edit the frozen translation.
 }
 ```
 
-All listed fields are required. `extensions.learnerLanguage` is required and
-must use the workflow target language.
+All listed fields are required. `extensions.learnerLanguage` is required and must use the workflow target language.
 
-Do not add a `meaning.text`, per-line translation field, v1 compatibility
-field, or any second snapshot of canonical text.
+Do not add a `meaning.text`, per-line translation field, v1 compatibility field, or any second snapshot of canonical text.
 
 ## Source Lines
 
-Copy every line from `source-projection.json`, add `language`, and optionally
-add `endTimeMs` / `languageSpans`:
+Copy every line from `source-projection.json`, add `language`, and optionally add `endTimeMs` / `languageSpans`:
 
 ```json
 {
@@ -81,14 +71,11 @@ add `endTimeMs` / `languageSpans`:
 }
 ```
 
-`start` and `end` are Unicode code-point indexes, not UTF-16 units. The
-preparer rebuilds every projected source field from the frozen projection; a
-model-side edit fails with `stale_source_projection`.
+`start` and `end` are Unicode code-point indexes, not UTF-16 units. The preparer rebuilds every projected source field from the frozen projection; a model-side edit fails with `stale_source_projection`.
 
 ## Repetition Discovery
 
-Repetition discovery is deterministic and owned by this Skill. After the
-draft's lines and blocks are complete, run:
+Repetition discovery is deterministic and owned by this Skill. After the draft's lines and blocks are complete, run:
 
 ```powershell
 python scripts\discover_repetitions.py `
@@ -99,8 +86,7 @@ python scripts\discover_repetitions.py `
   --replace
 ```
 
-The tool writes `repetition-candidates.json`. Copy each candidate's
-`repetitionId` and `occurrences` array verbatim into the draft:
+The tool writes `repetition-candidates.json`. Copy each candidate's `repetitionId` and `occurrences` array verbatim into the draft:
 
 ```json
 {
@@ -122,14 +108,12 @@ The tool writes `repetition-candidates.json`. Copy each candidate's
 }
 ```
 
-Do not copy the candidate tool's auxiliary `normalizedText` field into the
-draft.
+Do not copy the candidate tool's auxiliary `normalizedText` field into the draft.
 
 Discovery rules:
 
 - source line boundaries are removed before comparison;
-- the concatenated source span is NFC-normalized as one string; do not
-  normalize each line independently;
+- the concatenated source span is NFC-normalized as one string; do not normalize each line independently;
 - matching is exact and maximal, never fuzzy;
 - internal whitespace remains significant;
 - only spans of at least 8 Unicode code points are emitted;
@@ -137,13 +121,11 @@ Discovery rules:
 - overlapping groups are allowed;
 - one group has at most one occurrence per block.
 
-Every candidate must remain present after any later draft edit. If blocks or
-lines change, rerun discovery and replace the draft's candidate list exactly.
+Every candidate must remain present after any later draft edit. If blocks or lines change, rerun discovery and replace the draft's candidate list exactly.
 
 ## Blocks and Composed Meaning
 
-Blocks are learning units. Their `meaning` contains ordered references to
-meaning-unit occurrences, not copied text:
+Blocks are learning units. Their `meaning` contains ordered references to meaning-unit occurrences, not copied text:
 
 ```json
 {
@@ -167,22 +149,18 @@ meaning-unit occurrences, not copied text:
 }
 ```
 
-Effective text is the concatenation of `textBefore + effectiveMeaningText`
-for each part. Parts must be:
+Effective text is the concatenation of `textBefore + effectiveMeaningText` for each part. Parts must be:
 
 - source ordered;
 - non-overlapping;
 - within the block;
 - sufficient to cover every `lineId` in the block at least once.
 
-`textBefore` is learner-facing connective text, limited to 120 characters.
-Every changed tail or otherwise uncovered line requires its own meaning-unit
-occurrence.
+`textBefore` is learner-facing connective text, limited to 120 characters. Every changed tail or otherwise uncovered line requires its own meaning-unit occurrence.
 
 ## Meaning Units
 
-A meaning unit owns the canonical learner-facing synthesis shared by all of
-its occurrences:
+A meaning unit owns the canonical learner-facing synthesis shared by all of its occurrences:
 
 ```json
 {
@@ -219,13 +197,9 @@ its occurrences:
 }
 ```
 
-Each occurrence has one contiguous source span. Cross-line segments must use
-immediately adjacent source lines; the previous segment ends at its line's
-end, and the next starts at code point zero.
+Each occurrence has one contiguous source span. Cross-line segments must use immediately adjacent source lines; the previous segment ends at its line's end, and the next starts at code point zero.
 
-Canonical `text` must be a faithful synthesis of the frozen translation. Do
-not invent motives, causes, setting, intensity, editorial judgements, or
-meta-narrative absent from the accepted translation.
+Canonical `text` must be a faithful synthesis of the frozen translation. Do not invent motives, causes, setting, intensity, editorial judgements, or meta-narrative absent from the accepted translation.
 
 Only an explicit occurrence override may change the effective text:
 
@@ -252,8 +226,7 @@ The reason is required and is reviewed by the semantic auditor.
 
 ## Phrases and Occurrences
 
-A phrase owns canonical surface and grammar semantics. Each occurrence owns
-one block and one contiguous source span:
+A phrase owns canonical surface and grammar semantics. Each occurrence owns one block and one contiguous source span:
 
 ```json
 {
@@ -299,16 +272,10 @@ one block and one contiguous source span:
 - `surface` must be NFC-equal to every occurrence's exact source span.
 - A phrase may occur multiple times in one block.
 - Canonical prose is shared automatically; never copy it per occurrence.
-- A relation points to the canonical `phraseId` and therefore applies to every
-  occurrence.
-- An occurrence override may replace `role`, `labels`, `explanation`, `gloss`,
-  `notes`, or `alternatives`, but must include `reason`.
+- A relation points to the canonical `phraseId` and therefore applies to every occurrence.
+- An occurrence override may replace `role`, `labels`, `explanation`, `gloss`, `notes`, or `alternatives`, but must include `reason`.
 
-If a phrase occurrence is wholly inside a repetition occurrence, every block
-in that repetition group must contain a corresponding phrase occurrence at
-the same canonical offset. Missing mappings fail with
-`shared-occurrence-incomplete`; wrong mappings fail with
-`shared-occurrence-mismatch`.
+If a phrase occurrence is wholly inside a repetition occurrence, every block in that repetition group must contain a corresponding phrase occurrence at the same canonical offset. Missing mappings fail with `shared-occurrence-incomplete`; wrong mappings fail with `shared-occurrence-mismatch`.
 
 The same shared-occurrence rule applies to meaning-unit occurrences.
 
@@ -341,14 +308,11 @@ Grammar notes and uncertainties use block arrays:
 ```
 
 - `blockIds` is required, non-empty, and unique.
-- Without `phraseId`, the scope is block-only and `occurrenceIds` is
-  forbidden.
+- Without `phraseId`, the scope is block-only and `occurrenceIds` is forbidden.
 - With `phraseId`, every listed block must contain that phrase.
-- `occurrenceIds`, when present, narrows the scope to explicit phrase
-  occurrences and all must belong to the listed blocks.
+- `occurrenceIds`, when present, narrows the scope to explicit phrase occurrences and all must belong to the listed blocks.
 
-Use one canonical note or relation rather than duplicating it per repeated
-block.
+Use one canonical note or relation rather than duplicating it per repeated block.
 
 ## Learner Language
 
@@ -361,18 +325,14 @@ All learner-facing prose must use `extensions.learnerLanguage`:
 - uncertainty messages and alternatives;
 - override reasons.
 
-Stable identifiers such as `role`, `register`, `relation.type`, and label
-namespace/key may remain English. A gloss is learner-facing prose, not a
-machine identifier.
+Stable identifiers such as `role`, `register`, `relation.type`, and label namespace/key may remain English. A gloss is learner-facing prose, not a machine identifier.
 
-No present learner-facing field may be blank or whitespace-only. Omit an
-optional field instead of emitting an empty string.
+No present learner-facing field may be blank or whitespace-only. Omit an optional field instead of emitting an empty string.
 
 ## Content Guardrails
 
 - No inline HTML, entities, CDATA, declarations, or processing instructions.
-- Reject duplicate JSON keys, non-finite numbers, unpaired UTF-16 surrogates,
-  and invalid UTF-8 before validation.
+- Reject duplicate JSON keys, non-finite numbers, unpaired UTF-16 surrogates, and invalid UTF-8 before validation.
 - No absolute filesystem paths.
 - `source.lrcFile` is a visible sibling basename only.
 - No per-line translation fields.
@@ -382,8 +342,4 @@ optional field instead of emitting an empty string.
 
 ## Semantic Audit Handoff
 
-After `prepare.py` succeeds, the parent records the grammar child proof and
-dispatches a different fresh child using
-[semantic-audit-contract.md](semantic-audit-contract.md). The auditor reviews
-`analysis-candidate.json` as the canonical artifact, may read this draft as
-supporting context, and writes only `semantic-audit.json`.
+After `prepare.py` succeeds, the parent records the grammar child proof and dispatches a different fresh child using [semantic-audit-contract.md](semantic-audit-contract.md). The auditor reviews `analysis-candidate.json` as the canonical artifact, may read this draft as supporting context, and writes only `semantic-audit.json`.

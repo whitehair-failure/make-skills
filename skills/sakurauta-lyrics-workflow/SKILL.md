@@ -6,14 +6,11 @@ version: 2.0.0
 
 # SakuraUta Lyrics Workflow v2
 
-The parent coordinates three independent child roles. It does not translate,
-invent grammar analysis, or self-audit semantics inline.
+The parent coordinates three independent child roles. It does not translate, invent grammar analysis, or self-audit semantics inline.
 
 1. Translation child: reads `lyrics-translator` directly.
-2. Grammar child: authors only the v2 semantic draft. A deterministic tool
-   writes its repetition-candidate list, and the parent freezes the candidate.
-3. Semantic-audit child: a different fresh transcript that reviews the frozen
-   candidate and writes only the audit report.
+2. Grammar child: authors only the v2 semantic draft. A deterministic tool writes its repetition-candidate list, and the parent freezes the candidate.
+3. Semantic-audit child: a different fresh transcript that reviews the frozen candidate and writes only the audit report.
 
 Only the deterministic finalizer writes `<song>.json`.
 
@@ -29,13 +26,9 @@ Reject video, subtitle, remote, non-LRC, network-share, and symlinked inputs.
 
 ## Isolation Gate
 
-A child is a fresh non-forked sub-agent or a fresh independent CLI transcript.
-Loading a Skill into the parent is not isolation.
+A child is a fresh non-forked sub-agent or a fresh independent CLI transcript. Loading a Skill into the parent is not isolation.
 
-The grammar and semantic-audit children must have different
-`childTranscriptId` values. When the harness exposes parent IDs, both children
-must also differ from the parent. If separate contexts are unavailable, stop
-with:
+The grammar and semantic-audit children must have different `childTranscriptId` values. When the harness exposes parent IDs, both children must also differ from the parent. If separate contexts are unavailable, stop with:
 
 ```text
 ERROR [isolation-unavailable]
@@ -61,8 +54,7 @@ Write the accepted bilingual LRC to <workdir>\accepted-translated.lrc.
 Do not produce grammar JSON.
 ```
 
-Do not add a translation wrapper Skill or restate the translator's quality
-rules.
+Do not add a translation wrapper Skill or restate the translator's quality rules.
 
 3. After the user accepts the translation, freeze it:
 
@@ -73,8 +65,7 @@ python <grammar-skill>\scripts\verify_translation.py `
   --workdir "<workdir>"
 ```
 
-The parent owns acceptance. Do not proceed if freezing fails. Do not edit
-`translated.lrc` after this point.
+The parent owns acceptance. Do not proceed if freezing fails. Do not edit `translated.lrc` after this point.
 
 ## Phase 2: Fresh Grammar Analysis
 
@@ -116,17 +107,14 @@ python <grammar-skill>\scripts\prepare.py "<song.lrc>" `
   --learner-language "<target>"
 ```
 
-This validates projection/freeze identity, Schema v2, exact repetition
-completion, canonical source normalization, meaning coverage, and shared
-occurrence mappings. It writes:
+This validates projection/freeze identity, Schema v2, exact repetition completion, canonical source normalization, meaning coverage, and shared occurrence mappings. It writes:
 
 - `analysis-candidate.json`;
 - `analysis-candidate.sha256`;
 - `repetition-candidates.json`;
 - `validation-report.json`.
 
-If preparation fails, rerun grammar analysis in a new fresh transcript. Do
-not patch the candidate or translation.
+If preparation fails, rerun grammar analysis in a new fresh transcript. Do not patch the candidate or translation.
 
 ## Phase 3: Independent Semantic Audit
 
@@ -142,9 +130,7 @@ Do not edit the draft, candidate, hash, translation, or <song>.json.
 Use learner language <target>.
 ```
 
-The audit must review every candidate block and meaning-unit ID. It must reject
-unsupported additions, translation mismatches, shared semantic drift,
-coverage gaps, and missing source evidence.
+The audit must review every candidate block and meaning-unit ID. It must reject unsupported additions, translation mismatches, shared semantic drift, coverage gaps, and missing source evidence.
 
 8. Validate the audit report:
 
@@ -170,12 +156,9 @@ python <grammar-skill>\scripts\record_isolation.py `
   --replace
 ```
 
-This ID must differ from `<actual-grammar-child-id>`. A same-child audit is
-always rejected.
+This ID must differ from `<actual-grammar-child-id>`. A same-child audit is always rejected.
 
-If the audit fails, do not finalize. Rerun analysis and audit in fresh
-transcripts after resolving the finding, or ask the user to resolve the
-semantic dispute.
+If the audit fails, do not finalize. Rerun analysis and audit in fresh transcripts after resolving the finding, or ask the user to resolve the semantic dispute.
 
 ## Phase 4: Finalize and Verify
 
@@ -213,13 +196,9 @@ Report the final path and validation status.
 
 ## Boundaries
 
-- `<skills>` contains this Skill, `lyrics-translator`, and
-  `lyrics-grammar-sidecar`.
+- `<skills>` contains this Skill, `lyrics-translator`, and `lyrics-grammar-sidecar`.
 - Translation remains byte-for-byte owned by `lyrics-translator`.
 - Grammar semantics are authored by the fresh grammar child.
-- Semantic approval is owned by the different fresh audit child, never the
-  grammar child or parent.
-- Deterministic scripts own Schema v2, repetition discovery/completion,
-  source/span validation, hash chaining, isolation verification, and atomic
-  writes.
+- Semantic approval is owned by the different fresh audit child, never the grammar child or parent.
+- Deterministic scripts own Schema v2, repetition discovery/completion, source/span validation, hash chaining, isolation verification, and atomic writes.
 - No v1 fallback, migration, or dual read exists.

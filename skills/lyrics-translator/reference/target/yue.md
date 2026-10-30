@@ -5,9 +5,8 @@
 - Produce authentic, culturally grounded Cantonese lyrics tailored to Cantopop vocal aesthetics.
 - **Tone-Melody Alignment (协音)**: If translating for cover/singing, words must align with the melody's pitch contours (0430 / 0243 tonal scales) to avoid comical or confusing "tone inversion" (倒字).
 - **Register Consistency**: Choose either:
-  1. *Elevated/Lyrical Register (传统雅词/标准白话文书写)*: Preferred for ballads, emotional love songs, and dramatic melodies.
-  2. *Colloquial Register (纯正口语白话)*: Preferred for energetic pop, rap, conversational duets, or city satire (using 嘅, 咗, 仲, 唔, 咁).
-  Never mix colloquial and classical registers haphazardly without artistic purpose.
+  1. _Elevated/Lyrical Register (传统雅词/标准白话文书写)_: Preferred for ballads, emotional love songs, and dramatic melodies.
+  2. _Colloquial Register (纯正口语白话)_: Preferred for energetic pop, rap, conversational duets, or city satire (using 嘅, 咗, 仲, 唔, 咁). Never mix colloquial and classical registers haphazardly without artistic purpose.
 - Maintain consistent character rhythm and breath phrasing.
 
 ## Native Voice Checklist

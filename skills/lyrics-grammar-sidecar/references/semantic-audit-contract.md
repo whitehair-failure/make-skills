@@ -1,8 +1,6 @@
 # Independent Semantic Audit Contract v1
 
-The semantic-audit child is a fresh non-forked transcript. It must differ
-from both the parent and the grammar-analysis child. Its only authored
-artifact is `<workdir>/semantic-audit.json`.
+The semantic-audit child is a fresh non-forked transcript. It must differ from both the parent and the grammar-analysis child. Its only authored artifact is `<workdir>/semantic-audit.json`.
 
 ## Inputs
 
@@ -15,34 +13,22 @@ The auditor reads:
 - `<workdir>/semantic-draft.json` as read-only supporting context;
 - [draft-contract.md](draft-contract.md) for field semantics.
 
-The candidate is the canonical reviewed artifact. The draft is supporting
-context only and must not be used to override changed candidate content.
-The candidate must remain the exact canonical UTF-8 JSON bytes emitted by
-`prepare.py`; duplicate keys, non-finite numbers, and unpaired surrogates are
-invalid.
+The candidate is the canonical reviewed artifact. The draft is supporting context only and must not be used to override changed candidate content. The candidate must remain the exact canonical UTF-8 JSON bytes emitted by `prepare.py`; duplicate keys, non-finite numbers, and unpaired surrogates are invalid.
 
-The auditor must not edit the draft, candidate, hash, translation,
-projection, or final sibling JSON.
+The auditor must not edit the draft, candidate, hash, translation, projection, or final sibling JSON.
 
 ## What to Audit
 
 For every candidate block and meaning unit:
 
-1. Check that effective block meaning is a faithful synthesis of the frozen
-   translation for the block's source spans.
-2. Reject unsupported additions, including new motives, causes, scenes,
-   relationships, intensity words, editorial commentary, or meta-narrative.
-3. Check changed and newly analyzed tails. A tail not covered by either a
-   meaning part or required phrase/note relation is a coverage gap.
-4. Check that canonical shared fields are not semantically drifted between
-   occurrences. Canonical data must be reused unless an occurrence has an
-   explicit, reasoned override.
-5. Check that every note, relation, uncertainty, and override has source
-   evidence in the original LRC and accepted translation.
+1. Check that effective block meaning is a faithful synthesis of the frozen translation for the block's source spans.
+2. Reject unsupported additions, including new motives, causes, scenes, relationships, intensity words, editorial commentary, or meta-narrative.
+3. Check changed and newly analyzed tails. A tail not covered by either a meaning part or required phrase/note relation is a coverage gap.
+4. Check that canonical shared fields are not semantically drifted between occurrences. Canonical data must be reused unless an occurrence has an explicit, reasoned override.
+5. Check that every note, relation, uncertainty, and override has source evidence in the original LRC and accepted translation.
 6. Check that learner-facing prose uses the requested language.
 
-Warnings may be recorded without failing. Any error finding makes the audit
-fail and blocks finalization.
+Warnings may be recorded without failing. Any error finding makes the audit fail and blocks finalization.
 
 ## Report
 
@@ -59,8 +45,7 @@ fail and blocks finalization.
 }
 ```
 
-`reviewedBlockIds` and `reviewedMeaningUnitIds` must exactly match the IDs in
-the candidate, without omissions or duplicates.
+`reviewedBlockIds` and `reviewedMeaningUnitIds` must exactly match the IDs in the candidate, without omissions or duplicates.
 
 Finding shape:
 
@@ -82,8 +67,7 @@ Stable codes:
 - `missing-source-evidence`
 - `other`
 
-`status: "fail"` requires at least one `error` finding. `status: "pass"`
-requires no `error` findings.
+`status: "fail"` requires at least one `error` finding. `status: "pass"` requires no `error` findings.
 
 ## Validation and Identity
 
@@ -111,7 +95,4 @@ python scripts\record_isolation.py `
   --replace
 ```
 
-Do not invent transcript IDs. The grammar proof and audit proof must contain
-different `childTranscriptId` values. Each proof binds the actual artifact
-SHA-256. A same-child audit, v1 proof, stale projection hash, changed report,
-or failed audit must prevent finalization.
+Do not invent transcript IDs. The grammar proof and audit proof must contain different `childTranscriptId` values. Each proof binds the actual artifact SHA-256. A same-child audit, v1 proof, stale projection hash, changed report, or failed audit must prevent finalization.

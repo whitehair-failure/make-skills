@@ -4,23 +4,15 @@ Reusable, user-invoked Skills maintained outside the SakuraUta application.
 
 ## SakuraUta Lyrics Workflow v2
 
-Entry point:
-`skills/sakurauta-lyrics-workflow/SKILL.md`.
+Entry point: `skills/sakurauta-lyrics-workflow/SKILL.md`.
 
 The parent coordinates three fresh child roles:
 
-1. **Translation child** reads the unchanged
-   `skills/lyrics-translator/SKILL.md` directly and produces an accepted
-   bilingual LRC. There is no translation wrapper Skill.
-2. **Grammar child** reads `skills/lyrics-grammar-sidecar/SKILL.md` and its v2
-   draft contract. It authors only `semantic-draft.json`; deterministic tools
-   write the repetition-candidate list and freeze the analysis candidate.
-3. **Semantic-audit child** is a different fresh transcript. It reviews
-   `analysis-candidate.json` against the original LRC and frozen translation,
-   then writes only `semantic-audit.json`.
+1. **Translation child** reads the unchanged `skills/lyrics-translator/SKILL.md` directly and produces an accepted bilingual LRC. There is no translation wrapper Skill.
+2. **Grammar child** reads `skills/lyrics-grammar-sidecar/SKILL.md` and its v2 draft contract. It authors only `semantic-draft.json`; deterministic tools write the repetition-candidate list and freeze the analysis candidate.
+3. **Semantic-audit child** is a different fresh transcript. It reviews `analysis-candidate.json` against the original LRC and frozen translation, then writes only `semantic-audit.json`.
 
-The parent never self-audits semantics. Only the deterministic finalizer
-writes the production sibling JSON.
+The parent never self-audits semantics. Only the deterministic finalizer writes the production sibling JSON.
 
 Schema v1 is not accepted or migrated. Existing v1 files must be regenerated.
 
@@ -29,22 +21,15 @@ Schema v1 is not accepted or migrated. Existing v1 files must be regenerated.
 - Main workflow: `skills/sakurauta-lyrics-workflow/SKILL.md`
 - Existing translator: `skills/lyrics-translator/SKILL.md`
 - Grammar Skill: `skills/lyrics-grammar-sidecar/SKILL.md`
-- Grammar schema:
-  `skills/lyrics-grammar-sidecar/schema/v2/lyrics-grammar-analysis.schema.json`
-- Audit schema:
-  `skills/lyrics-grammar-sidecar/schema/v2/semantic-audit.schema.json`
-- Isolation proof schema:
-  `skills/lyrics-grammar-sidecar/schema/v2/isolation-proof.schema.json`
-- Repetition candidate schema:
-  `skills/lyrics-grammar-sidecar/schema/v2/repetition-candidates.schema.json`
-- Draft contract:
-  `skills/lyrics-grammar-sidecar/references/draft-contract.md`
-- Audit contract:
-  `skills/lyrics-grammar-sidecar/references/semantic-audit-contract.md`
+- Grammar schema: `skills/lyrics-grammar-sidecar/schema/v2/lyrics-grammar-analysis.schema.json`
+- Audit schema: `skills/lyrics-grammar-sidecar/schema/v2/semantic-audit.schema.json`
+- Isolation proof schema: `skills/lyrics-grammar-sidecar/schema/v2/isolation-proof.schema.json`
+- Repetition candidate schema: `skills/lyrics-grammar-sidecar/schema/v2/repetition-candidates.schema.json`
+- Draft contract: `skills/lyrics-grammar-sidecar/references/draft-contract.md`
+- Audit contract: `skills/lyrics-grammar-sidecar/references/semantic-audit-contract.md`
 - Fixtures: `skills/lyrics-grammar-sidecar/fixtures/`
 
-All three Skill directories can be copied together. The grammar Skill resolves
-its schemas relative to its own `SKILL.md`.
+All three Skill directories can be copied together. The grammar Skill resolves its schemas relative to its own `SKILL.md`.
 
 ### Invocation
 
@@ -192,11 +177,7 @@ python "$Grammar\scripts\validate_all.py" `
   --learner-language "<target language>"
 ```
 
-The generated file is always
-`dirname(lrc) / basename(lrc, ".lrc") + ".json"`. Existing differing output is
-preserved unless the user explicitly passes `--replace`.
-An existing Schema v1 production file must be regenerated with `--replace`;
-it is never read as compatible input.
+The generated file is always `dirname(lrc) / basename(lrc, ".lrc") + ".json"`. Existing differing output is preserved unless the user explicitly passes `--replace`. An existing Schema v1 production file must be regenerated with `--replace`; it is never read as compatible input.
 
 ### Hash and Isolation Chain
 
@@ -209,16 +190,11 @@ source projection
   -> final <song>.json
 ```
 
-The grammar proof binds the draft. The audit report binds the candidate hash.
-The audit proof binds the report. The finalizer rechecks every link before the
-atomic write.
+The grammar proof binds the draft. The audit report binds the candidate hash. The audit proof binds the report. The finalizer rechecks every link before the atomic write.
 
 ### Language Contract
 
-Both grammar and audit children receive the same target language. All
-learner-facing prose must use it. New v2 files record it in
-`extensions.learnerLanguage`; this field is required. Stable machine
-identifiers may remain English.
+Both grammar and audit children receive the same target language. All learner-facing prose must use it. New v2 files record it in `extensions.learnerLanguage`; this field is required. Stable machine identifiers may remain English.
 
 ### Verification
 
@@ -229,17 +205,6 @@ python skills\lyrics-grammar-sidecar\scripts\selftest.py
 git diff --exit-code -- skills/lyrics-translator
 ```
 
-The suite covers ja/ko/zh/en and Unicode fixtures, Schema v2 and v1 rejection,
-exact maximal NFC repetition, line-boundary variation, cross-line NFC
-composition, internal whitespace, short/similar non-matches, metadata
-exclusion, overlapping and three-occurrence groups, changed tails, canonical
-phrase/meaning inheritance, explicit overrides, meaning coverage, strict JSON,
-path/HTML guards, independent audit pass/fail, proof/hash/canonical-byte
-tamper, and atomic finalization.
+The suite covers ja/ko/zh/en and Unicode fixtures, Schema v2 and v1 rejection, exact maximal NFC repetition, line-boundary variation, cross-line NFC composition, internal whitespace, short/similar non-matches, metadata exclusion, overlapping and three-occurrence groups, changed tails, canonical phrase/meaning inheritance, explicit overrides, meaning coverage, strict JSON, path/HTML guards, independent audit pass/fail, proof/hash/canonical-byte tamper, and atomic finalization.
 
-`fixtures/golden-vectors.json` pins line identity, Unicode spans, and
-cross-line NFC composition; the compact `fixtures/repetition` case pins the
-three-occurrence v2 shape for SakuraUta's cross-repository checks. Its full
-candidate, audit, isolation, and finalize artifacts are generated in temporary
-workdirs instead of being committed. The fixture's `.gitattributes` keeps the
-JSON/LRC golden bytes stable across Git checkouts.
+`fixtures/golden-vectors.json` pins line identity, Unicode spans, and cross-line NFC composition; the compact `fixtures/repetition` case pins the three-occurrence v2 shape for SakuraUta's cross-repository checks. Its full candidate, audit, isolation, and finalize artifacts are generated in temporary workdirs instead of being committed. The fixture's `.gitattributes` keeps the JSON/LRC golden bytes stable across Git checkouts.

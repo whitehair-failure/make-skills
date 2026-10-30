@@ -13,7 +13,7 @@ Translate across global languages with dedicated profiles and an extensible arch
 Detect which mode the user wants. Default to **reading mode** unless the user says "翻唱", "cover version", "singable translation", "翻配", or explicitly requests rhyme/rhythm matching.
 
 | Mode | Priority | When to use |
-|:---|:---|:---|
+| :-- | :-- | :-- |
 | **Reading** (default) | Semantic integrity > naturalness > singability | Bilingual subtitles, lyric booklets, understanding foreign songs |
 | **Cover/Singing** | Singability + rhythm + rhyme > literalness | Creating a performable version in the target language |
 
@@ -56,6 +56,7 @@ In **reading mode**, follow the standard workflow below. In **cover mode**, addi
 ## Extensible Language Support (We are the World)
 
 This skill utilizes an open, modular language architecture:
+
 - **Dedicated Profiles**: High-frequency music languages have hand-crafted profiles in `reference/source/` and `reference/target/`:
   - East Asian: `zh` (Mandarin), `ja` (Japanese), `ko` (Korean), `yue` (Cantonese)
   - Southeast Asian: `th` (Thai), `vi` (Vietnamese)
@@ -76,8 +77,7 @@ After completing the translation and delivering the file, offer the user a follo
 
 > Translation complete. To revise specific lines, reply with the line numbers or quote the lines you'd like changed. To polish the entire translation, reply "继续润色" or "refine".
 
-For **line-level revision**: re-read the surrounding 3–5 line context, apply the same source/target/pair rules, and replace only the specified lines.
-For **full polish**: re-run Steps 5–6 of common.md (Refine + Quality Check) on the existing output.
+For **line-level revision**: re-read the surrounding 3–5 line context, apply the same source/target/pair rules, and replace only the specified lines. For **full polish**: re-run Steps 5–6 of common.md (Refine + Quality Check) on the existing output.
 
 ## Commands
 

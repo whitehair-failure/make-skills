@@ -6,9 +6,7 @@ version: 2.0.0
 
 # Lyrics Grammar Sidecar v2
 
-This Skill is self-contained. Its schemas live under `schema/v2/`, scripts
-under `scripts/`, and authoring/audit contracts under `references/`. Do not
-depend on a repository root or developer machine path.
+This Skill is self-contained. Its schemas live under `schema/v2/`, scripts under `scripts/`, and authoring/audit contracts under `references/`. Do not depend on a repository root or developer machine path.
 
 Schema v1 is unsupported. Do not dual-read, migrate, adapt, or fall back.
 
@@ -20,12 +18,9 @@ The overall workflow uses three fresh child roles:
 2. analyze grammar in a fresh grammar child;
 3. audit semantics in a different fresh audit child.
 
-The grammar child writes only `semantic-draft.json`. The deterministic
-candidate tool may write `repetition-candidates.json`; `prepare.py` writes the
-candidate and its hash.
+The grammar child writes only `semantic-draft.json`. The deterministic candidate tool may write `repetition-candidates.json`; `prepare.py` writes the candidate and its hash.
 
-The audit child writes only `semantic-audit.json`. It cannot edit the
-candidate or draft.
+The audit child writes only `semantic-audit.json`. It cannot edit the candidate or draft.
 
 Only `finalize.py` writes the production sibling `<song>.json`.
 
@@ -33,13 +28,11 @@ Only `finalize.py` writes the production sibling `<song>.json`.
 
 - original local `.lrc`;
 - `<song>.grammar-work/source-projection.json`;
-- accepted and frozen `<song>.grammar-work/translated.lrc` plus
-  `translation-manifest.json`;
+- accepted and frozen `<song>.grammar-work/translated.lrc` plus `translation-manifest.json`;
 - target learner language, for example `zh-CN`;
 - real non-forked transcript IDs for grammar analysis and semantic audit.
 
-Reject video, subtitle, remote, network-share, non-LRC, and symlinked source
-inputs.
+Reject video, subtitle, remote, network-share, non-LRC, and symlinked source inputs.
 
 ## 1. Project the Source
 
@@ -48,16 +41,13 @@ python scripts\project_source.py "<song.lrc>" `
   --song-id "<SakuraUta songId>"
 ```
 
-Default output:
-`<song-dir>/<song>.grammar-work/source-projection.json`.
+Default output: `<song-dir>/<song>.grammar-work/source-projection.json`.
 
-The projection owns line IDs, source order, timestamps, fingerprints,
-source text, and the projection hash. Later stages may not rewrite them.
+The projection owns line IDs, source order, timestamps, fingerprints, source text, and the projection hash. Later stages may not rewrite them.
 
 ## 2. Freeze the Accepted Translation
 
-The translation is produced by the unchanged `lyrics-translator` Skill. After
-the user accepts it:
+The translation is produced by the unchanged `lyrics-translator` Skill. After the user accepts it:
 
 ```powershell
 python scripts\verify_translation.py `
@@ -66,8 +56,7 @@ python scripts\verify_translation.py `
   --workdir "<workdir>"
 ```
 
-This writes `translated.lrc` and `translation-manifest.json`. A later edit
-fails closed.
+This writes `translated.lrc` and `translation-manifest.json`. A later edit fails closed.
 
 ## 3. Fresh Grammar Child
 
@@ -89,8 +78,7 @@ The child records the target language:
 }
 ```
 
-It writes only `semantic-draft.json`. All learner-facing prose uses that
-language. Stable identifiers may remain English.
+It writes only `semantic-draft.json`. All learner-facing prose uses that language. Stable identifiers may remain English.
 
 After lines and blocks exist, discover exact repetitions:
 
@@ -103,11 +91,9 @@ python scripts\discover_repetitions.py `
   --replace
 ```
 
-Copy every candidate's `repetitionId` and `occurrences` verbatim into the
-draft's `repetitionGroups`. The grammar child may not invent or alter groups.
+Copy every candidate's `repetitionId` and `occurrences` verbatim into the draft's `repetitionGroups`. The grammar child may not invent or alter groups.
 
-After the child returns and the draft is final, the parent records the actual
-grammar-child identity:
+After the child returns and the draft is final, the parent records the actual grammar-child identity:
 
 ```powershell
 python scripts\record_isolation.py `
@@ -151,20 +137,13 @@ Outputs:
 - `repetition-candidates.json`;
 - `validation-report.json`.
 
-If preparation fails, revise the semantic draft in a fresh grammar child.
-Do not edit the frozen translation or hand-edit the candidate.
+If preparation fails, revise the semantic draft in a fresh grammar child. Do not edit the frozen translation or hand-edit the candidate.
 
 ## 5. Different Fresh Semantic-Audit Child
 
-Dispatch a fresh child whose transcript differs from the grammar child and
-parent. Give it the original LRC, frozen translation, candidate, candidate
-hash, read-only semantic draft for supporting context, and
-[references/semantic-audit-contract.md](references/semantic-audit-contract.md).
+Dispatch a fresh child whose transcript differs from the grammar child and parent. Give it the original LRC, frozen translation, candidate, candidate hash, read-only semantic draft for supporting context, and [references/semantic-audit-contract.md](references/semantic-audit-contract.md).
 
-The parent dispatches the child. The audit child writes only
-`semantic-audit.json`. It must review every
-candidate block and meaning unit and explicitly report unsupported additions,
-translation mismatches, shared drift, coverage gaps, and missing evidence.
+The parent dispatches the child. The audit child writes only `semantic-audit.json`. It must review every candidate block and meaning unit and explicitly report unsupported additions, translation mismatches, shared drift, coverage gaps, and missing evidence.
 
 Validate the report:
 
@@ -190,8 +169,7 @@ python scripts\record_isolation.py `
   --replace
 ```
 
-An audit `fail`, error finding, missing reviewed ID, candidate-hash mismatch,
-same-child self-audit, or v1 proof blocks finalization.
+An audit `fail`, error finding, missing reviewed ID, candidate-hash mismatch, same-child self-audit, or v1 proof blocks finalization.
 
 ## 6. Finalize
 
@@ -221,10 +199,7 @@ It atomically writes:
 dirname(lrc) / basename(lrc, ".lrc") + ".json"
 ```
 
-Existing differing output is preserved unless the user explicitly passes
-`--replace`.
-An existing Schema v1 production file must be regenerated with `--replace`;
-there is no v1 read or migration path.
+Existing differing output is preserved unless the user explicitly passes `--replace`. An existing Schema v1 production file must be regenerated with `--replace`; there is no v1 read or migration path.
 
 Then validate the production result and chain:
 
@@ -241,8 +216,7 @@ python scripts\validate_all.py `
 Deterministic validation owns:
 
 - Schema v2 and v1 rejection;
-- strict UTF-8 JSON with duplicate-key, non-finite-number, and surrogate
-  rejection;
+- strict UTF-8 JSON with duplicate-key, non-finite-number, and surrogate rejection;
 - source identity and projection hashes;
 - Unicode code-point spans and contiguous occurrence mapping;
 - exact NFC repetition discovery and candidate completion;
@@ -251,9 +225,7 @@ Deterministic validation owns:
 - references, multi-block scopes, learner language, HTML/path guards;
 - candidate/audit/proof hash chain and atomic writes.
 
-It does not decide whether prose is faithful. That is the independent audit
-child's responsibility. The generation child must never self-approve its own
-semantic audit.
+It does not decide whether prose is faithful. That is the independent audit child's responsibility. The generation child must never self-approve its own semantic audit.
 
 ## Self-Test
 
@@ -263,13 +235,4 @@ Run from any current directory:
 python scripts\selftest.py
 ```
 
-The standard-library-only suite generates every prepare -> audit -> finalize
-chain in a temporary workdir. Its only committed repetition case is the compact
-`fixtures/repetition` input set (source LRC, accepted translation, semantic
-draft, and final sidecar golden), so candidate, audit, isolation-proof, and
-validation-report copies are not duplicated in the repository. Coverage
-includes exact maximal and changed-tail repetition, three occurrences, overlap,
-line-break variation, cross-line NFC composition, internal whitespace, fuzzy
-non-matches, metadata exclusion, missing/wrong shared occurrences, blank
-overrides, meaning coverage, strict JSON, path and HTML guards, audit pass/fail,
-proof/hash/canonical-byte tamper, v1 rejection, and atomic finalization.
+The standard-library-only suite generates every prepare -> audit -> finalize chain in a temporary workdir. Its only committed repetition case is the compact `fixtures/repetition` input set (source LRC, accepted translation, semantic draft, and final sidecar golden), so candidate, audit, isolation-proof, and validation-report copies are not duplicated in the repository. Coverage includes exact maximal and changed-tail repetition, three occurrences, overlap, line-break variation, cross-line NFC composition, internal whitespace, fuzzy non-matches, metadata exclusion, missing/wrong shared occurrences, blank overrides, meaning coverage, strict JSON, path and HTML guards, audit pass/fail, proof/hash/canonical-byte tamper, v1 rejection, and atomic finalization.

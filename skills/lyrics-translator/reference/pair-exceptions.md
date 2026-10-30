@@ -19,34 +19,34 @@ Read only the entry matching the selected direction or language families. These 
 ## Romance Family Inter-Translation (FR ↔ ES ↔ IT ↔ PT)
 
 - **False Friends (Faux Amis / Falsos Amigos)**: Despite close cognates, do not blindly transfer words:
-  - *Salir* (ES: to exit) vs. *Salire* (IT: to go up).
-  - *Presunto* (PT: ham / alleged) vs. *Presunto* (ES/IT: presumed).
-  - *Attualmente / Actualmente* (currently, NOT actually).
-  - *Esquisito* (PT: weird) vs. *Exquisito* (ES: exquisite).
-- **Pro-Drop Asymmetry**: Spanish and Italian drop subject pronouns almost completely; French requires explicit subject pronouns (*je*, *tu*, *il*). Do not omit subjects when translating into French, and do not over-inject pronouns when translating into Spanish/Italian.
-- **Sinalefa vs. Elision**: Adapt to each language's metrical rules (Spanish *sinalefa* merges syllables across words, French elides unstressed *-e*).
+  - _Salir_ (ES: to exit) vs. _Salire_ (IT: to go up).
+  - _Presunto_ (PT: ham / alleged) vs. _Presunto_ (ES/IT: presumed).
+  - _Attualmente / Actualmente_ (currently, NOT actually).
+  - _Esquisito_ (PT: weird) vs. _Exquisito_ (ES: exquisite).
+- **Pro-Drop Asymmetry**: Spanish and Italian drop subject pronouns almost completely; French requires explicit subject pronouns (_je_, _tu_, _il_). Do not omit subjects when translating into French, and do not over-inject pronouns when translating into Spanish/Italian.
+- **Sinalefa vs. Elision**: Adapt to each language's metrical rules (Spanish _sinalefa_ merges syllables across words, French elides unstressed _-e_).
 
 ## DE → Any Language (especially CJK / EN / Romance)
 
-- **Klammerform / Separable Prefix Resolution**: Before translating any German line, verify whether a separable prefix (e.g. *an-*, *auf-*, *aus-*, *vor-*, *mit-*) or dependent infinitive appears on the next line. Never translate the first half of the verb bracket literally in isolation.
-- **Compound Word Splitting**: Deconstruct German *Komposita* into melodic phrases or emotional cores; never translate element-by-element.
+- **Klammerform / Separable Prefix Resolution**: Before translating any German line, verify whether a separable prefix (e.g. _an-_, _auf-_, _aus-_, _vor-_, _mit-_) or dependent infinitive appears on the next line. Never translate the first half of the verb bracket literally in isolation.
+- **Compound Word Splitting**: Deconstruct German _Komposita_ into melodic phrases or emotional cores; never translate element-by-element.
 
 ## Romance / Germanic (EN, FR, ES, DE, IT, PT) → CJK / TH / VI
 
-- **Pronoun and Article De-Cluttering**: Western languages strictly mark grammatical subjects, articles (*the*, *a*, *le*, *el*, *der*), and auxiliary verbs. CJK, Thai, and Vietnamese naturally omit them. Strip empty functional tokens to keep the target line concise and singable.
-- **Double Negation Conversion**: When translating Spanish (*no quiero nada*) or Italian (*non ho niente*), render as clean single negation in Chinese, English, or Japanese without confusing double negatives.
+- **Pronoun and Article De-Cluttering**: Western languages strictly mark grammatical subjects, articles (_the_, _a_, _le_, _el_, _der_), and auxiliary verbs. CJK, Thai, and Vietnamese naturally omit them. Strip empty functional tokens to keep the target line concise and singable.
+- **Double Negation Conversion**: When translating Spanish (_no quiero nada_) or Italian (_non ho niente_), render as clean single negation in Chinese, English, or Japanese without confusing double negatives.
 - **Tense to Aspect Conversion**: Convert complex European tenses (Subjunctive, Passé Composé, Present Perfect) into contextual aspect markers (e.g., 了/过 in Chinese, て形/た in Japanese) without clunky mechanical time words.
 
 ## CJK / TH / VI → European Languages (EN, FR, ES, DE, IT, PT, RU)
 
 - **Subject & Link Restoration**: Supply grammatical subjects and verbal links only when grammatically mandatory for a natural line. Preserve poetic ambiguity when the original intentionally obscures who is acting.
 - **Topic-Comment to SVO Reorganization**: Asian topic-comment structures must be restructured into natural European sentence flow without sounding bureaucratic.
-- **Kinship-to-Romance Pronoun Translation**: Terms like *พี่/น้อง* (Thai), *anh/em* (Vietnamese), *오빠* (Korean), or *哥哥/妹妹* in romance lyrics must be mapped to romantic/intimate pronouns (*you*, *my love*, *chéri*, *amor*), not literal familial terms.
+- **Kinship-to-Romance Pronoun Translation**: Terms like _พี่/น้อง_ (Thai), _anh/em_ (Vietnamese), _오빠_ (Korean), or _哥哥/妹妹_ in romance lyrics must be mapped to romantic/intimate pronouns (_you_, _my love_, _chéri_, _amor_), not literal familial terms.
 
 ## RU → Any Language
 
 - **Dynamic Stress Alignment**: In singing/cover mode, respect the Russian original's rhythmic meter (Iambic/Trochaic/etc.).
-- **Verbless Sentence Rendering**: Russian lines without verbs (*Я один в тишине*) should be rendered with natural target verbs or poetic fragments without adding artificial padding.
+- **Verbless Sentence Rendering**: Russian lines without verbs (_Я один в тишине_) should be rendered with natural target verbs or poetic fragments without adding artificial padding.
 
 ## YUE ↔ ZH (Cantonese ↔ Mandarin)
 

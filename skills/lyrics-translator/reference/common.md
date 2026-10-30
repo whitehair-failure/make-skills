@@ -20,6 +20,7 @@ When invoked frequently, apply these 8 rules first:
    3. **Single-line readability** (lowest) — desirable but subordinate to #1 and #2
 
    → Do **not** force a non-closing clause into a complete standalone sentence to satisfy single-line readability. Front-loading the next line's conclusion is also prohibited.
+
 7. **Consistent key terms**: Use the same translation for choruses, hooks, core imagery, and the song title throughout the entire file. Reuse identical wording for repeated lines.
 8. **Final check before output**: Confirm no target-language lines were modified, no metadata was touched, no third line was stacked onto a source line, no plot points were added, and all line lengths are within cap.
 
@@ -28,7 +29,7 @@ When invoked frequently, apply these 8 rules first:
 ## Absolute Constraints (Red Lines)
 
 | Constraint | Rule |
-|:---|:---|
+| :-- | :-- |
 | **Format Lock** | The agent writes **plain text only** — never insert timestamp tokens into translation lines. LRC structure and timestamps are managed entirely by `lrc_merge.py`. (Plain Mode: same rule — no timestamps exist.) |
 | **Metadata Immunity** | Lines beginning with `[ti:` `[ar:` `[al:` `[by:` `[offset:` and embedded production credits (`词：`/`曲：`/`編曲：`/`作詞：`/`Lyrics:`/`Music:` etc.) must never be translated or modified. |
 | **No Re-translation** | Do not re-translate or modify lines already in the target language. |
@@ -65,7 +66,7 @@ When invoked frequently, apply these 8 rules first:
   5. Chorus/unison sections: use a neutral shared register unless the song clearly assigns different lyrics to simultaneous voices (in which case translate each independently).
 - [ ] Lock in chorus, hook, and core-imagery translations to use consistently throughout.
 - [ ] Flag long-sentence splits, chained grammar, and code-mixed passages. For lines with existing translations, decide: keep, overwrite, or skip (never stack).
-- [ ] **Multi-Source-Language Detection** — Check whether the file contains blocks of lyrics in a language different from the primary source language. This is *not* the same as single-line code-mixing (e.g., a Japanese line with a few English words); this is **block-level language switching** where consecutive lines are entirely in a different language.
+- [ ] **Multi-Source-Language Detection** — Check whether the file contains blocks of lyrics in a language different from the primary source language. This is _not_ the same as single-line code-mixing (e.g., a Japanese line with a few English words); this is **block-level language switching** where consecutive lines are entirely in a different language.
 
   **How to detect**: While labeling lines, note any run of 2+ consecutive source-lyric lines whose script/language differs from the primary source. Common patterns:
   - Japanese song with an English bridge or rap section
@@ -87,7 +88,7 @@ While surveying, collect every phrase whose meaning is not transparent from its 
 **Deep-dive triggers (any phrase matching one of these must enter the table):**
 
 | Trigger | What to check | Example |
-|:---|:---|:---|
+| :-- | :-- | :-- |
 | Idiom / proverb, truncated or altered | Identify the full underlying proverb; render its intent in this context | 酸いも甘いも… ← 酸いも甘いも噛み分ける |
 | Katakana loanword (or other script borrowing) | Render the original foreign word's semantics, never the sound or glyph | ランデブー → a date / tryst |
 | Pun / homophone wordplay | If untranslatable, fuse both senses into one rendering | 愛(あい) / 相(あい) overlapping |
@@ -99,7 +100,7 @@ While surveying, collect every phrase whose meaning is not transparent from its 
 **In-memory table format (held alongside the block map until the final check):**
 
 | Phrase | Resolved meaning | Locked rendering |
-|:---|:---|:---|
+| :-- | :-- | :-- |
 | 酸いも甘いもわからないの | truncation of the kotowaza "to know bitter from sweet" → too smitten to tell love's flavors | 连酸甜都分不清 |
 | 浮つく | giddy, sweetly fluttery (positive) | 雀跃的 |
 
@@ -130,8 +131,7 @@ Block 2: [line C]       — self-contained
 Block 3: [lines D, E]   — chained (incomplete predicate / verb-ending stack)
 ```
 
-→ Every source line must be assigned to exactly one block.
-→ **Block construction incomplete → do not proceed to Step 4.**
+→ Every source line must be assigned to exactly one block. → **Block construction incomplete → do not proceed to Step 4.**
 
 **Procedure:**
 
@@ -140,13 +140,13 @@ Block 3: [lines D, E]   — chained (incomplete predicate / verb-ending stack)
 3. Group consecutive semantically connected lines into a **semantic block**. A block may be 1 line (self-contained) or multiple lines (chained/dependent).
 4. **Translate at block level**: Derive meaning, pronouns, and register from the full block, then output one translation per source line.
    - Output format is unchanged: each source line gets exactly one same-timestamp translation line.
-   - The *meaning* used to write that translation comes from the whole block — not the isolated line.
+   - The _meaning_ used to write that translation comes from the whole block — not the isolated line.
 5. **Allow non-closing expressions**: A non-closing source line may produce a non-closing translation — do **not** force it into a standalone complete sentence.
 
 **Universal incomplete-sentence signals:**
 
 | Signal type | Description |
-|:---|:---|
+| :-- | :-- |
 | No predicate closure | Line ends without a terminating verb or complete predicate |
 | Modifier without head | Line is a modifier whose head noun/verb is on the next line |
 | Connective dependency | Line begins with a connective that requires the previous line |
@@ -159,13 +159,12 @@ Block 3: [lines D, E]   — chained (incomplete predicate / verb-ending stack)
 If **any** of the following is detected, per-line independent translation is **prohibited**:
 
 | Trigger | Condition |
-|:---|:---|
+| :-- | :-- |
 | Consecutive incomplete lines | Two or more consecutive lines with no terminal predicate |
 | Consecutive modifier chains | Two or more consecutive lines ending with te-form / `〜ように` / `〜ながら` / enjambment / verb-ending stack |
 | Cross-line semantic dependency | Current line's meaning requires the next line to resolve |
 
-→ ❌ **Independent per-line translation is forbidden**
-→ ✅ **Merge into one semantic block, then translate**
+→ ❌ **Independent per-line translation is forbidden** → ✅ **Merge into one semantic block, then translate**
 
 Violating this guard is a critical translation error.
 
@@ -176,7 +175,7 @@ Violating this guard is a critical translation error.
 [00:02]溶けてゆくように  →  像要融化消失那样
 ```
 
-*Both lines forced into standalone similes — redundant, stilted, and a semantic integrity violation.*
+_Both lines forced into standalone similes — redundant, stilted, and a semantic integrity violation._
 
 **Correct (block-level comprehension, then per-line output):**
 
@@ -207,7 +206,7 @@ Violating this guard is a critical translation error.
 Re-read the draft as a critic, not as its author. For each semantic block, run all three diagnostic dimensions before accepting any line:
 
 | Dimension | Check for | Failure example (JA → ZH) |
-|:---|:---|:---|
+| :-- | :-- | :-- |
 | **Accuracy** | Invented additions; dropped meaning; wrong subject; idiom resolved literally | きっと君の前では迷子 → 迷路的小孩 ("小孩/child" invented; 迷子 here means lost, with no noun) |
 | **Native voice** | Stiff or bookish register; translationese — apply the checklist in `reference/target/{target}.md` | 冷静沈着では どう頑張ったって無い → 无论怎样努力也无济于事 (bookish) — natural: 冷静沉着什么的 无论怎么努力都做不到 |
 | **Connotation** | Emotional color of the rendering must match the source | 浮つく → 浮躁 (negative restlessness; source is sweet giddiness) → 雀跃 |
@@ -246,7 +245,7 @@ After the quality check passes:
 Paraphrase is natural expansion of **information already in the source**. Over-interpretation **adds new plot, identity, scene, or motivation** not present in the original.
 
 | Judgment | Example |
-|:---|:---|
+| :-- | :-- |
 | ✓ **Acceptable paraphrase** — extends implied emotion naturally | `want to disappear` → `想消失不见` |
 | ✗ **Over-interpretation** — adds specifics not in the source | `想消失在失恋的痛苦里` ("heartbreak" is invented) |
 | ✓ **Acceptable** — reorders into natural target-language expression | Idiom or colloquial naturalization |
@@ -261,7 +260,7 @@ Use `reference/source/{source}.md`, `reference/target/{target}.md`, and applicab
 ## Special Line Handling
 
 | Line Type | Detection Criterion | Action |
-|:---:|:---|:---:|
+| :-: | :-- | :-: |
 | Blank timestamp line | `[01:23.45]` with empty or whitespace content | Pass through, no translation |
 | Pure SFX / interlude marker | `[01:23.45]♪` or `[01:23.45]♫` | Pass through, no translation |
 | LRC metadata tag | Starts with `[ti:` `[ar:` `[al:` `[by:` `[offset:` | Never translate or modify |
@@ -280,6 +279,7 @@ Use `reference/source/{source}.md`, `reference/target/{target}.md`, and applicab
 ### LRC Mode — what the agent edits (`.tmp.txt` working file)
 
 **Input `.tmp.txt`** (after `lrc_strip.py`):
+
 ```
 Song Title - Artist
 词：Lyricist
@@ -291,6 +291,7 @@ Existing target-language line
 ```
 
 **Correct output `.tmp.txt`** (after agent translation):
+
 ```
 Song Title - Artist
 词：Lyricist
@@ -304,6 +305,7 @@ Existing target-language line
 ```
 
 **Final `.lrc`** (after `lrc_merge.py`):
+
 ```lrc
 [ti:Song Title]
 [ar:Artist]
@@ -319,6 +321,7 @@ Existing target-language line
 ### Plain Mode — what the agent edits (`.txt` / `.md` directly)
 
 **Input:**
+
 ```
 Song Title - Artist
 词：Lyricist
@@ -328,6 +331,7 @@ Source lyric line two
 ```
 
 **Correct output:**
+
 ```
 Song Title - Artist
 词：Lyricist
