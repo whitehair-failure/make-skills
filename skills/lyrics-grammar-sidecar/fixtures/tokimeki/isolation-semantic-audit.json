@@ -1,5 +1,5 @@
 {
-  "artifactSha256": "sha256:173f3151a1aa2b3c0e8187c4f5453d59651aa58a227faae011bfe127188693be",
+  "artifactSha256": "sha256:13ee3d22c19f9bf49e31a69553eb29e385ec59f9147134444da8153ba06780dd",
   "childTranscriptId": "fixture-audit-child",
   "context": "non-forked-transcript",
   "isolationVersion": 2,

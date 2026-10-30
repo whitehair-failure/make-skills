@@ -84,7 +84,7 @@
           },
           {
             "meaningUnitOccurrenceId": "muo_chorus3_tail",
-            "textBefore": "，"
+            "textBefore": "。"
           }
         ]
       },
@@ -612,7 +612,7 @@
           ]
         }
       ],
-      "text": "，还加上了属于两个人的约定"
+      "text": "还加上了属于两个人的约定"
     },
     {
       "confidence": 0.9,
