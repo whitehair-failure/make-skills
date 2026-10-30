@@ -25,21 +25,16 @@
         "rawParts": ["cafe", "\u0301 emotion"]
       }
     },
-    "tokimeki": {
-      "fixture": "tokimeki/sidecar.json",
-      "semanticDraft": "tokimeki/semantic-draft.json",
-      "analysisCandidate": "tokimeki/analysis-candidate.json",
-      "candidateHashFile": "tokimeki/analysis-candidate.sha256",
-      "translatedLrc": "tokimeki/translated.lrc",
-      "translationManifest": "tokimeki/translation-manifest.json",
-      "semanticAudit": "tokimeki/semantic-audit.json",
-      "grammarIsolation": "tokimeki/isolation-grammar-analysis.json",
-      "auditIsolation": "tokimeki/isolation-semantic-audit.json",
+    "repetitionFixture": {
+      "sourceLrc": "repetition/source.lrc",
+      "fixture": "repetition/sidecar.json",
+      "semanticDraft": "repetition/semantic-draft.json",
+      "translatedLrc": "repetition/translated.lrc",
       "sharedPrefixOccurrences": 3,
       "changedTailOccurrences": 2,
       "hasExplicitOverride": true,
-      "sharedPhraseId": "p_tokimeki_emotion",
-      "sharedRelationId": "r_tokimeki_follow"
+      "sharedPhraseId": "p_dawn_song",
+      "sharedRelationId": "r_shared_development"
     },
     "semanticAudit": {
       "statuses": ["pass", "fail"],

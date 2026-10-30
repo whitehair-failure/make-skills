@@ -238,7 +238,8 @@ path/HTML guards, independent audit pass/fail, proof/hash/canonical-byte
 tamper, and atomic finalization.
 
 `fixtures/golden-vectors.json` pins line identity, Unicode spans, and
-cross-line NFC composition; the `tokimeki` fixture pins the full v2 shape and
-hash chain for SakuraUta's cross-repository checks. The fixture's
-`.gitattributes` keeps hash-bound JSON/LRC artifacts byte-stable across Git
-checkouts.
+cross-line NFC composition; the compact `fixtures/repetition` case pins the
+three-occurrence v2 shape for SakuraUta's cross-repository checks. Its full
+candidate, audit, isolation, and finalize artifacts are generated in temporary
+workdirs instead of being committed. The fixture's `.gitattributes` keeps the
+JSON/LRC golden bytes stable across Git checkouts.

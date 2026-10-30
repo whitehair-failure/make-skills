@@ -263,10 +263,13 @@ Run from any current directory:
 python scripts\selftest.py
 ```
 
-The standard-library-only suite uses temporary fixtures and committed v2
-golden fixtures. It covers exact maximal and changed-tail repetition, three
-occurrences, overlap, line-break variation, cross-line NFC composition,
-internal whitespace, fuzzy non-matches, metadata exclusion, missing/wrong
-shared occurrences, blank overrides, meaning coverage, strict JSON, path and
-HTML guards, audit pass/fail, proof/hash/canonical-byte tamper, v1 rejection,
-and atomic finalization.
+The standard-library-only suite generates every prepare -> audit -> finalize
+chain in a temporary workdir. Its only committed repetition case is the compact
+`fixtures/repetition` input set (source LRC, accepted translation, semantic
+draft, and final sidecar golden), so candidate, audit, isolation-proof, and
+validation-report copies are not duplicated in the repository. Coverage
+includes exact maximal and changed-tail repetition, three occurrences, overlap,
+line-break variation, cross-line NFC composition, internal whitespace, fuzzy
+non-matches, metadata exclusion, missing/wrong shared occurrences, blank
+overrides, meaning coverage, strict JSON, path and HTML guards, audit pass/fail,
+proof/hash/canonical-byte tamper, v1 rejection, and atomic finalization.

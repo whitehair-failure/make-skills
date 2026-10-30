@@ -1,94 +1,75 @@
 {
   "blocks": [
     {
-      "blockId": "b_chorus1",
+      "blockId": "b_repeat1",
       "confidence": 0.92,
-      "endTimeMs": 9000,
+      "endTimeMs": 3000,
       "labels": [],
       "lineIds": [
-        "l_7c8891c62179cbc2",
-        "l_16342e5fc2f5c629",
-        "l_46df78507017f7cf",
-        "l_9c9cbd6c70cd19c4",
-        "l_b1c613fa5c01b00a",
-        "l_4bef150cb484361c",
-        "l_528f2d18ad5d77ef",
-        "l_66be630f4356997c",
-        "l_13806681a6ddc179"
+        "l_79c9e958d5587621",
+        "l_6090d33d01c7de38",
+        "l_9bb0df02b6e7055f"
       ],
       "meaning": {
         "parts": [
           {
-            "meaningUnitOccurrenceId": "muo_chorus1_shared"
+            "meaningUnitOccurrenceId": "muo_shared_1"
           },
           {
-            "meaningUnitOccurrenceId": "muo_chorus1_tail_base"
+            "meaningUnitOccurrenceId": "muo_tail_base_1"
           }
         ]
       },
       "startTimeMs": 1000
     },
     {
-      "blockId": "b_chorus2",
+      "blockId": "b_repeat2",
       "confidence": 0.92,
-      "endTimeMs": 19000,
+      "endTimeMs": 6000,
       "labels": [],
       "lineIds": [
-        "l_766f17b605a331c7",
-        "l_c2991a829a9644b9",
-        "l_dbf07d5a65f92de6",
-        "l_52ddfc76ee98f296",
-        "l_5a3be99b6e2a31cc",
-        "l_c3d46ba681b48b73",
-        "l_8cdfa20e40e896ad",
-        "l_34a929d8ea487dc2",
-        "l_9e326491c1dbfee6",
-        "l_6ba3d49dca007d0d"
+        "l_d1caf9dbec649ef5",
+        "l_7e35c48f8fa4d296",
+        "l_240af5ae892e5f5b"
       ],
       "meaning": {
         "parts": [
           {
-            "meaningUnitOccurrenceId": "muo_chorus2_shared"
+            "meaningUnitOccurrenceId": "muo_shared_2"
           },
           {
-            "meaningUnitOccurrenceId": "muo_chorus2_tail_base"
+            "meaningUnitOccurrenceId": "muo_tail_base_2"
           },
           {
-            "meaningUnitOccurrenceId": "muo_chorus2_tail_extra",
+            "meaningUnitOccurrenceId": "muo_tail_extra_2",
             "textBefore": "，"
           }
         ]
       },
-      "startTimeMs": 10000
+      "startTimeMs": 4000
     },
     {
-      "blockId": "b_chorus3",
+      "blockId": "b_repeat3",
       "confidence": 0.92,
-      "endTimeMs": 28000,
+      "endTimeMs": 9000,
       "labels": [],
       "lineIds": [
-        "l_4c94a1ff5dc2dbef",
-        "l_a00b5b161fae405e",
-        "l_3920de738be76327",
-        "l_907c7b27817afd22",
-        "l_33c98fa631be720e",
-        "l_3a6c5474d618d81e",
-        "l_ad6427a4113b1a47",
-        "l_980f2ccaf57b79ce",
-        "l_98e49e1da8040010"
+        "l_dfa7725af6754e17",
+        "l_4be7f19fa39b5d6e",
+        "l_12e01a3ef94990fc"
       ],
       "meaning": {
         "parts": [
           {
-            "meaningUnitOccurrenceId": "muo_chorus3_shared"
+            "meaningUnitOccurrenceId": "muo_shared_3"
           },
           {
-            "meaningUnitOccurrenceId": "muo_chorus3_tail",
-            "textBefore": "。"
+            "meaningUnitOccurrenceId": "muo_tail_alt_3",
+            "textBefore": "，"
           }
         ]
       },
-      "startTimeMs": 20000
+      "startTimeMs": 7000
     }
   ],
   "extensions": {
@@ -97,464 +78,169 @@
   "grammarNotes": [
     {
       "confidence": 0.9,
-      "explanation": "同一条短语分析覆盖三个副歌块。",
+      "explanation": "三次出现共享同一组核心短语与说明。",
       "labels": [
         {
           "key": "shared_theme",
           "namespace": "syntax"
         }
       ],
-      "noteId": "g_tokimeki_reused",
+      "noteId": "g_shared_theme",
       "scope": {
         "blockIds": [
-          "b_chorus1",
-          "b_chorus2",
-          "b_chorus3"
+          "b_repeat1",
+          "b_repeat2",
+          "b_repeat3"
         ],
-        "phraseId": "p_tokimeki_emotion"
-      }
-    },
-    {
-      "confidence": 0.88,
-      "explanation": "第二段尾部在共同约定之外新增了“两个人的约定”。",
-      "labels": [
-        {
-          "key": "added_tail",
-          "namespace": "discourse"
-        }
-      ],
-      "noteId": "g_tail_extended",
-      "scope": {
-        "blockIds": [
-          "b_chorus2"
-        ]
+        "phraseId": "p_dawn_song"
       }
     }
   ],
   "lines": [
     {
-      "fingerprint": "sha256:d397d27b613b937d2234ac41090641e19ee9f63752416ab289f696d91fe6c0b2",
+      "fingerprint": "sha256:1160992bb93500a18af7096e987ff286da5789802e21555cb9c545c1179860ce",
       "language": "ja",
-      "lineId": "l_7c8891c62179cbc2",
+      "lineId": "l_79c9e958d5587621",
       "role": "text",
       "sourceOrder": 0,
-      "text": "ときめきエモーション",
+      "text": "夜明けの歌を君と歌う",
       "timeMs": 1000
     },
     {
-      "fingerprint": "sha256:d43055f6992f4d4ab1c1865e19dcd26f30a567f138bc71ffb4c847508cab530a",
+      "fingerprint": "sha256:36890807f2e9094cefee840fbe5d5ac47da20751d999b045900b308b91025234",
       "language": "ja",
-      "lineId": "l_16342e5fc2f5c629",
+      "lineId": "l_6090d33d01c7de38",
       "role": "text",
       "sourceOrder": 1,
-      "text": "高鳴る胸のリズム",
+      "text": "同じ約束を胸に抱いて",
       "timeMs": 2000
     },
     {
-      "fingerprint": "sha256:006996e6bd2465d58274f6f40a2ddfe975710cef8f1047e48d3a12a38a2f580e",
+      "fingerprint": "sha256:e59bf1641748d7237bc01bbed5261596ac46c9fb3264a451e889c2c0f4b2c314",
       "language": "ja",
-      "lineId": "l_46df78507017f7cf",
+      "lineId": "l_9bb0df02b6e7055f",
       "role": "text",
       "sourceOrder": 2,
-      "text": "夜空を越えて",
+      "text": "この声が届くまで",
       "timeMs": 3000
     },
     {
-      "fingerprint": "sha256:fba01f0c95584a986c3859c0c4c153277c8a3d24b27d0c4f04563d4f09d9176d",
+      "fingerprint": "sha256:1160992bb93500a18af7096e987ff286da5789802e21555cb9c545c1179860ce",
       "language": "ja",
-      "lineId": "l_9c9cbd6c70cd19c4",
+      "lineId": "l_d1caf9dbec649ef5",
       "role": "text",
       "sourceOrder": 3,
-      "text": "君を探している",
+      "text": "夜明けの歌を君と歌う",
       "timeMs": 4000
     },
     {
-      "fingerprint": "sha256:8b84ab5527f74dec12c35425d73bdf90ff4f3134d41fab403a34ec91408327ad",
+      "fingerprint": "sha256:36890807f2e9094cefee840fbe5d5ac47da20751d999b045900b308b91025234",
       "language": "ja",
-      "lineId": "l_b1c613fa5c01b00a",
+      "lineId": "l_7e35c48f8fa4d296",
       "role": "text",
       "sourceOrder": 4,
-      "text": "月明かりだけが",
+      "text": "同じ約束を胸に抱いて",
       "timeMs": 5000
     },
     {
-      "fingerprint": "sha256:cf4ff771ba8edc6f0c2b214b87be4328898792251c425255c7f22f01497ae662",
+      "fingerprint": "sha256:902f1c9bfa6494c9aebc1ea6576719e08424c6d7daba383470f07690b3227d50",
       "language": "ja",
-      "lineId": "l_4bef150cb484361c",
+      "lineId": "l_240af5ae892e5f5b",
       "role": "text",
       "sourceOrder": 5,
-      "text": "ふたりを照らす",
+      "text": "この声が届くまでもっと遠くへ",
       "timeMs": 6000
     },
     {
-      "fingerprint": "sha256:1fd15b55a4bb9d006fdc9940d3f98e28c89223e5754b3cdc4cb44e3bfa219967",
+      "fingerprint": "sha256:1160992bb93500a18af7096e987ff286da5789802e21555cb9c545c1179860ce",
       "language": "ja",
-      "lineId": "l_528f2d18ad5d77ef",
+      "lineId": "l_dfa7725af6754e17",
       "role": "text",
       "sourceOrder": 6,
-      "text": "この気持ち届けたい",
+      "text": "夜明けの歌を君と歌う",
       "timeMs": 7000
     },
     {
-      "fingerprint": "sha256:b4fb1597c5971738df806ae537f10bad999247a1582cd502b247b40b7236c1a0",
+      "fingerprint": "sha256:36890807f2e9094cefee840fbe5d5ac47da20751d999b045900b308b91025234",
       "language": "ja",
-      "lineId": "l_66be630f4356997c",
+      "lineId": "l_4be7f19fa39b5d6e",
       "role": "text",
       "sourceOrder": 7,
-      "text": "今すぐ君のもとへ",
+      "text": "同じ約束を胸に抱いて",
       "timeMs": 8000
-    },
-    {
-      "fingerprint": "sha256:dd20a9f0f10833187b31f7bfdca2cf9afc916cf397cd88bda60362236c9566df",
-      "language": "ja",
-      "lineId": "l_13806681a6ddc179",
-      "role": "text",
-      "sourceOrder": 8,
-      "text": "あの日あの場所で交わした約束",
-      "timeMs": 9000
-    },
-    {
-      "fingerprint": "sha256:d397d27b613b937d2234ac41090641e19ee9f63752416ab289f696d91fe6c0b2",
-      "language": "ja",
-      "lineId": "l_766f17b605a331c7",
-      "role": "text",
-      "sourceOrder": 9,
-      "text": "ときめきエモーション",
-      "timeMs": 10000
-    },
-    {
-      "fingerprint": "sha256:d43055f6992f4d4ab1c1865e19dcd26f30a567f138bc71ffb4c847508cab530a",
-      "language": "ja",
-      "lineId": "l_c2991a829a9644b9",
-      "role": "text",
-      "sourceOrder": 10,
-      "text": "高鳴る胸のリズム",
-      "timeMs": 11000
-    },
-    {
-      "fingerprint": "sha256:006996e6bd2465d58274f6f40a2ddfe975710cef8f1047e48d3a12a38a2f580e",
-      "language": "ja",
-      "lineId": "l_dbf07d5a65f92de6",
-      "role": "text",
-      "sourceOrder": 11,
-      "text": "夜空を越えて",
-      "timeMs": 12000
-    },
-    {
-      "fingerprint": "sha256:fba01f0c95584a986c3859c0c4c153277c8a3d24b27d0c4f04563d4f09d9176d",
-      "language": "ja",
-      "lineId": "l_52ddfc76ee98f296",
-      "role": "text",
-      "sourceOrder": 12,
-      "text": "君を探している",
-      "timeMs": 13000
-    },
-    {
-      "fingerprint": "sha256:8b84ab5527f74dec12c35425d73bdf90ff4f3134d41fab403a34ec91408327ad",
-      "language": "ja",
-      "lineId": "l_5a3be99b6e2a31cc",
-      "role": "text",
-      "sourceOrder": 13,
-      "text": "月明かりだけが",
-      "timeMs": 14000
-    },
-    {
-      "fingerprint": "sha256:cf4ff771ba8edc6f0c2b214b87be4328898792251c425255c7f22f01497ae662",
-      "language": "ja",
-      "lineId": "l_c3d46ba681b48b73",
-      "role": "text",
-      "sourceOrder": 14,
-      "text": "ふたりを照らす",
-      "timeMs": 15000
-    },
-    {
-      "fingerprint": "sha256:1fd15b55a4bb9d006fdc9940d3f98e28c89223e5754b3cdc4cb44e3bfa219967",
-      "language": "ja",
-      "lineId": "l_8cdfa20e40e896ad",
-      "role": "text",
-      "sourceOrder": 15,
-      "text": "この気持ち届けたい",
-      "timeMs": 16000
-    },
-    {
-      "fingerprint": "sha256:b4fb1597c5971738df806ae537f10bad999247a1582cd502b247b40b7236c1a0",
-      "language": "ja",
-      "lineId": "l_34a929d8ea487dc2",
-      "role": "text",
-      "sourceOrder": 16,
-      "text": "今すぐ君のもとへ",
-      "timeMs": 17000
-    },
-    {
-      "fingerprint": "sha256:965d5baa55ee3c18266ae07db76fc818643145ff8bb016624b3ce62dcd7e89c4",
-      "language": "ja",
-      "lineId": "l_9e326491c1dbfee6",
-      "role": "text",
-      "sourceOrder": 17,
-      "text": "あの日あの場所で",
-      "timeMs": 18000
-    },
-    {
-      "fingerprint": "sha256:3967ba214b6c5852e8d7ed052c7d41f3ad0ff21f8873998e2b99eb95146ce3b1",
-      "language": "ja",
-      "lineId": "l_6ba3d49dca007d0d",
-      "role": "text",
-      "sourceOrder": 18,
-      "text": "交わした約束二人の約束",
-      "timeMs": 19000
-    },
-    {
-      "fingerprint": "sha256:d397d27b613b937d2234ac41090641e19ee9f63752416ab289f696d91fe6c0b2",
-      "language": "ja",
-      "lineId": "l_4c94a1ff5dc2dbef",
-      "role": "text",
-      "sourceOrder": 19,
-      "text": "ときめきエモーション",
-      "timeMs": 20000
-    },
-    {
-      "fingerprint": "sha256:d43055f6992f4d4ab1c1865e19dcd26f30a567f138bc71ffb4c847508cab530a",
-      "language": "ja",
-      "lineId": "l_a00b5b161fae405e",
-      "role": "text",
-      "sourceOrder": 20,
-      "text": "高鳴る胸のリズム",
-      "timeMs": 21000
-    },
-    {
-      "fingerprint": "sha256:006996e6bd2465d58274f6f40a2ddfe975710cef8f1047e48d3a12a38a2f580e",
-      "language": "ja",
-      "lineId": "l_3920de738be76327",
-      "role": "text",
-      "sourceOrder": 21,
-      "text": "夜空を越えて",
-      "timeMs": 22000
-    },
-    {
-      "fingerprint": "sha256:fba01f0c95584a986c3859c0c4c153277c8a3d24b27d0c4f04563d4f09d9176d",
-      "language": "ja",
-      "lineId": "l_907c7b27817afd22",
-      "role": "text",
-      "sourceOrder": 22,
-      "text": "君を探している",
-      "timeMs": 23000
-    },
-    {
-      "fingerprint": "sha256:8b84ab5527f74dec12c35425d73bdf90ff4f3134d41fab403a34ec91408327ad",
-      "language": "ja",
-      "lineId": "l_33c98fa631be720e",
-      "role": "text",
-      "sourceOrder": 23,
-      "text": "月明かりだけが",
-      "timeMs": 24000
-    },
-    {
-      "fingerprint": "sha256:cf4ff771ba8edc6f0c2b214b87be4328898792251c425255c7f22f01497ae662",
-      "language": "ja",
-      "lineId": "l_3a6c5474d618d81e",
-      "role": "text",
-      "sourceOrder": 24,
-      "text": "ふたりを照らす",
-      "timeMs": 25000
-    },
-    {
-      "fingerprint": "sha256:1fd15b55a4bb9d006fdc9940d3f98e28c89223e5754b3cdc4cb44e3bfa219967",
-      "language": "ja",
-      "lineId": "l_ad6427a4113b1a47",
-      "role": "text",
-      "sourceOrder": 25,
-      "text": "この気持ち届けたい",
-      "timeMs": 26000
-    },
-    {
-      "fingerprint": "sha256:b4fb1597c5971738df806ae537f10bad999247a1582cd502b247b40b7236c1a0",
-      "language": "ja",
-      "lineId": "l_980f2ccaf57b79ce",
-      "role": "text",
-      "sourceOrder": 26,
-      "text": "今すぐ君のもとへ",
-      "timeMs": 27000
     },
     {
       "fingerprint": "sha256:3263f63806dcf3499b4d4b8bd768fd346754d887659c34efb78f300fe04990eb",
       "language": "ja",
-      "lineId": "l_98e49e1da8040010",
+      "lineId": "l_12e01a3ef94990fc",
       "role": "text",
-      "sourceOrder": 27,
+      "sourceOrder": 8,
       "text": "新しい朝を迎えに行こう",
-      "timeMs": 28000
+      "timeMs": 9000
     }
   ],
   "meaningUnits": [
     {
       "confidence": 0.9,
       "labels": [],
-      "meaningUnitId": "mu_chorus_shared",
+      "meaningUnitId": "mu_shared_core",
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "muo_chorus1_shared",
+          "blockId": "b_repeat1",
+          "occurrenceId": "muo_shared_1",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_7c8891c62179cbc2",
+              "lineId": "l_79c9e958d5587621",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_16342e5fc2f5c629",
+              "end": 10,
+              "lineId": "l_6090d33d01c7de38",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_46df78507017f7cf",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_9c9cbd6c70cd19c4",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_b1c613fa5c01b00a",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_4bef150cb484361c",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_528f2d18ad5d77ef",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_66be630f4356997c",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "muo_chorus2_shared",
+          "blockId": "b_repeat2",
+          "occurrenceId": "muo_shared_2",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_766f17b605a331c7",
+              "lineId": "l_d1caf9dbec649ef5",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_c2991a829a9644b9",
+              "end": 10,
+              "lineId": "l_7e35c48f8fa4d296",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_dbf07d5a65f92de6",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_52ddfc76ee98f296",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_5a3be99b6e2a31cc",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_c3d46ba681b48b73",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_8cdfa20e40e896ad",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_34a929d8ea487dc2",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus3",
-          "occurrenceId": "muo_chorus3_shared",
+          "blockId": "b_repeat3",
+          "occurrenceId": "muo_shared_3",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_4c94a1ff5dc2dbef",
+              "lineId": "l_dfa7725af6754e17",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_a00b5b161fae405e",
+              "end": 10,
+              "lineId": "l_4be7f19fa39b5d6e",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_3920de738be76327",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_907c7b27817afd22",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_33c98fa631be720e",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_3a6c5474d618d81e",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_ad6427a4113b1a47",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_980f2ccaf57b79ce",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         }
       ],
-      "text": "怦然心动，心跳加速，越过夜空寻找你；月光照亮我们，想把这份心情立刻传达给你。"
+      "text": "在黎明的歌声中，两人守着同一个约定。"
     },
     {
       "confidence": 0.9,
@@ -562,37 +248,31 @@
       "meaningUnitId": "mu_tail_base",
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "muo_chorus1_tail_base",
+          "blockId": "b_repeat1",
+          "occurrenceId": "muo_tail_base_1",
           "sourceSegments": [
             {
-              "end": 14,
-              "lineId": "l_13806681a6ddc179",
+              "end": 8,
+              "lineId": "l_9bb0df02b6e7055f",
               "start": 0,
-              "text": "あの日あの場所で交わした約束"
+              "text": "この声が届くまで"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "muo_chorus2_tail_base",
+          "blockId": "b_repeat2",
+          "occurrenceId": "muo_tail_base_2",
           "sourceSegments": [
             {
               "end": 8,
-              "lineId": "l_9e326491c1dbfee6",
+              "lineId": "l_240af5ae892e5f5b",
               "start": 0,
-              "text": "あの日あの場所で"
-            },
-            {
-              "end": 6,
-              "lineId": "l_6ba3d49dca007d0d",
-              "start": 0,
-              "text": "交わした約束"
+              "text": "この声が届くまで"
             }
           ]
         }
       ],
-      "text": "那一天在那个地方许下的约定"
+      "text": "让这份声音传到你身边。"
     },
     {
       "confidence": 0.9,
@@ -600,46 +280,46 @@
       "meaningUnitId": "mu_tail_extra",
       "occurrences": [
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "muo_chorus2_tail_extra",
+          "blockId": "b_repeat2",
+          "occurrenceId": "muo_tail_extra_2",
           "sourceSegments": [
             {
-              "end": 11,
-              "lineId": "l_6ba3d49dca007d0d",
-              "start": 6,
-              "text": "二人の約束"
+              "end": 14,
+              "lineId": "l_240af5ae892e5f5b",
+              "start": 8,
+              "text": "もっと遠くへ"
             }
           ]
         }
       ],
-      "text": "还加上了属于两个人的约定"
+      "text": "再让声音传得更远一些。"
     },
     {
       "confidence": 0.9,
       "labels": [],
-      "meaningUnitId": "mu_tail_chorus3",
+      "meaningUnitId": "mu_tail_alt",
       "occurrences": [
         {
-          "blockId": "b_chorus3",
-          "occurrenceId": "muo_chorus3_tail",
+          "blockId": "b_repeat3",
+          "occurrenceId": "muo_tail_alt_3",
           "sourceSegments": [
             {
               "end": 11,
-              "lineId": "l_98e49e1da8040010",
+              "lineId": "l_12e01a3ef94990fc",
               "start": 0,
               "text": "新しい朝を迎えに行こう"
             }
           ]
         }
       ],
-      "text": "去迎接全新的清晨"
+      "text": "去迎接崭新的清晨。"
     }
   ],
   "phrases": [
     {
       "confidence": 0.9,
-      "explanation": "把强烈的心动作为整段反复出现的主题短语。",
-      "gloss": "怦然心动的情绪",
+      "explanation": "把黎明、歌声与同行者连成一个完整画面。",
+      "gloss": "与你同唱黎明之歌",
       "kind": "phrase",
       "labels": [
         {
@@ -649,54 +329,54 @@
       ],
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "po_tokimeki_emotion_1",
+          "blockId": "b_repeat1",
+          "occurrenceId": "po_dawn_song_1",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_7c8891c62179cbc2",
+              "lineId": "l_79c9e958d5587621",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "po_tokimeki_emotion_2",
+          "blockId": "b_repeat2",
+          "occurrenceId": "po_dawn_song_2",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_766f17b605a331c7",
+              "lineId": "l_d1caf9dbec649ef5",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             }
           ]
         },
         {
-          "blockId": "b_chorus3",
-          "occurrenceId": "po_tokimeki_emotion_3",
+          "blockId": "b_repeat3",
+          "occurrenceId": "po_dawn_song_3",
           "semanticOverride": {
-            "gloss": "再次确认的怦然心动",
-            "reason": "第三次出现时语气更接近再次确认。"
+            "gloss": "再次唱响的黎明之歌",
+            "reason": "第三次出现时强调重新出发的决心。"
           },
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_4c94a1ff5dc2dbef",
+              "lineId": "l_dfa7725af6754e17",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             }
           ]
         }
       ],
-      "phraseId": "p_tokimeki_emotion",
+      "phraseId": "p_dawn_song",
       "role": "shared_phrase",
-      "surface": "ときめきエモーション"
+      "surface": "夜明けの歌を君と歌う"
     },
     {
       "confidence": 0.9,
-      "explanation": "连续两行构成跨越夜空寻找对方的动作表达。",
-      "gloss": "越过夜空去寻找你",
+      "explanation": "把同一个约定放在心里，作为三次重复段的共同核心。",
+      "gloss": "把同一个约定抱在胸前",
       "kind": "phrase",
       "labels": [
         {
@@ -706,473 +386,184 @@
       ],
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "po_oikakeru_futari_1",
+          "blockId": "b_repeat1",
+          "occurrenceId": "po_same_promise_1",
           "sourceSegments": [
             {
-              "end": 6,
-              "lineId": "l_46df78507017f7cf",
+              "end": 10,
+              "lineId": "l_6090d33d01c7de38",
               "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_9c9cbd6c70cd19c4",
-              "start": 0,
-              "text": "君を探している"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "po_oikakeru_futari_2",
+          "blockId": "b_repeat2",
+          "occurrenceId": "po_same_promise_2",
           "sourceSegments": [
             {
-              "end": 6,
-              "lineId": "l_dbf07d5a65f92de6",
+              "end": 10,
+              "lineId": "l_7e35c48f8fa4d296",
               "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_52ddfc76ee98f296",
-              "start": 0,
-              "text": "君を探している"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus3",
-          "occurrenceId": "po_oikakeru_futari_3",
+          "blockId": "b_repeat3",
+          "occurrenceId": "po_same_promise_3",
           "sourceSegments": [
             {
-              "end": 6,
-              "lineId": "l_3920de738be76327",
+              "end": 10,
+              "lineId": "l_4be7f19fa39b5d6e",
               "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_907c7b27817afd22",
-              "start": 0,
-              "text": "君を探している"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         }
       ],
-      "phraseId": "p_oikakeru_futari",
+      "phraseId": "p_same_promise",
       "role": "shared_phrase",
-      "surface": "夜空を越えて君を探している"
-    },
-    {
-      "confidence": 0.9,
-      "explanation": "两行共同构成月光照亮两人的画面。",
-      "gloss": "只有月光照亮两个人",
-      "kind": "phrase",
-      "labels": [
-        {
-          "key": "shared_occurrence",
-          "namespace": "syntax"
-        }
-      ],
-      "occurrences": [
-        {
-          "blockId": "b_chorus1",
-          "occurrenceId": "po_terashitai_tsukiakari_1",
-          "sourceSegments": [
-            {
-              "end": 7,
-              "lineId": "l_b1c613fa5c01b00a",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_4bef150cb484361c",
-              "start": 0,
-              "text": "ふたりを照らす"
-            }
-          ]
-        },
-        {
-          "blockId": "b_chorus2",
-          "occurrenceId": "po_terashitai_tsukiakari_2",
-          "sourceSegments": [
-            {
-              "end": 7,
-              "lineId": "l_5a3be99b6e2a31cc",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_c3d46ba681b48b73",
-              "start": 0,
-              "text": "ふたりを照らす"
-            }
-          ]
-        },
-        {
-          "blockId": "b_chorus3",
-          "occurrenceId": "po_terashitai_tsukiakari_3",
-          "sourceSegments": [
-            {
-              "end": 7,
-              "lineId": "l_33c98fa631be720e",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_3a6c5474d618d81e",
-              "start": 0,
-              "text": "ふたりを照らす"
-            }
-          ]
-        }
-      ],
-      "phraseId": "p_terashitai_tsukiakari",
-      "role": "shared_phrase",
-      "surface": "月明かりだけがふたりを照らす"
+      "surface": "同じ約束を胸に抱いて"
     }
   ],
   "relations": [
     {
       "confidence": 0.86,
-      "explanation": "寻找对方的动作展开前面的心动主题。",
-      "fromPhraseId": "p_oikakeru_futari",
+      "explanation": "歌唱的画面落到共同守护的约定上。",
+      "fromPhraseId": "p_dawn_song",
       "labels": [
         {
           "key": "theme_development",
           "namespace": "syntax"
         }
       ],
-      "relationId": "r_tokimeki_follow",
-      "toPhraseId": "p_tokimeki_emotion",
+      "relationId": "r_shared_development",
+      "toPhraseId": "p_same_promise",
       "type": "develops_theme"
-    },
-    {
-      "confidence": 0.82,
-      "explanation": "月光场景承接并限定寻找对方的画面。",
-      "fromPhraseId": "p_terashitai_tsukiakari",
-      "labels": [
-        {
-          "key": "scene_frame",
-          "namespace": "discourse"
-        }
-      ],
-      "relationId": "r_moon_frames_search",
-      "toPhraseId": "p_oikakeru_futari",
-      "type": "frames_scene"
     }
   ],
   "repetitionGroups": [
     {
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "repo_c9db7788e32a89f6",
+          "blockId": "b_repeat1",
+          "occurrenceId": "repo_fdd755a81c3f1ba9",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_7c8891c62179cbc2",
+              "lineId": "l_79c9e958d5587621",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_16342e5fc2f5c629",
+              "end": 10,
+              "lineId": "l_6090d33d01c7de38",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_46df78507017f7cf",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_9c9cbd6c70cd19c4",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_b1c613fa5c01b00a",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_4bef150cb484361c",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_528f2d18ad5d77ef",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_66be630f4356997c",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "repo_549e051d69c61c49",
+          "blockId": "b_repeat2",
+          "occurrenceId": "repo_4adb29c7dbd23178",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_766f17b605a331c7",
+              "lineId": "l_d1caf9dbec649ef5",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_c2991a829a9644b9",
+              "end": 10,
+              "lineId": "l_7e35c48f8fa4d296",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_dbf07d5a65f92de6",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_52ddfc76ee98f296",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_5a3be99b6e2a31cc",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_c3d46ba681b48b73",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_8cdfa20e40e896ad",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_34a929d8ea487dc2",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         },
         {
-          "blockId": "b_chorus3",
-          "occurrenceId": "repo_aa4769f0cc09d10a",
+          "blockId": "b_repeat3",
+          "occurrenceId": "repo_ae815dad1426e6aa",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_4c94a1ff5dc2dbef",
+              "lineId": "l_dfa7725af6754e17",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
             },
             {
-              "end": 8,
-              "lineId": "l_a00b5b161fae405e",
+              "end": 10,
+              "lineId": "l_4be7f19fa39b5d6e",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_3920de738be76327",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_907c7b27817afd22",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_33c98fa631be720e",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_3a6c5474d618d81e",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_ad6427a4113b1a47",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_980f2ccaf57b79ce",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
+              "text": "同じ約束を胸に抱いて"
             }
           ]
         }
       ],
-      "repetitionId": "rep_d3040cc94c0c39b6"
+      "repetitionId": "rep_afd56bec1d4c6be3"
     },
     {
       "occurrences": [
         {
-          "blockId": "b_chorus1",
-          "occurrenceId": "repo_0935b5e7451814c7",
+          "blockId": "b_repeat1",
+          "occurrenceId": "repo_1a7157c9174867b4",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_7c8891c62179cbc2",
+              "lineId": "l_79c9e958d5587621",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
+            },
+            {
+              "end": 10,
+              "lineId": "l_6090d33d01c7de38",
+              "start": 0,
+              "text": "同じ約束を胸に抱いて"
             },
             {
               "end": 8,
-              "lineId": "l_16342e5fc2f5c629",
+              "lineId": "l_9bb0df02b6e7055f",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_46df78507017f7cf",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_9c9cbd6c70cd19c4",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_b1c613fa5c01b00a",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_4bef150cb484361c",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_528f2d18ad5d77ef",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_66be630f4356997c",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
-            },
-            {
-              "end": 14,
-              "lineId": "l_13806681a6ddc179",
-              "start": 0,
-              "text": "あの日あの場所で交わした約束"
+              "text": "この声が届くまで"
             }
           ]
         },
         {
-          "blockId": "b_chorus2",
-          "occurrenceId": "repo_5a0e5fa94a7973ff",
+          "blockId": "b_repeat2",
+          "occurrenceId": "repo_cb5f9f54336a515f",
           "sourceSegments": [
             {
               "end": 10,
-              "lineId": "l_766f17b605a331c7",
+              "lineId": "l_d1caf9dbec649ef5",
               "start": 0,
-              "text": "ときめきエモーション"
+              "text": "夜明けの歌を君と歌う"
+            },
+            {
+              "end": 10,
+              "lineId": "l_7e35c48f8fa4d296",
+              "start": 0,
+              "text": "同じ約束を胸に抱いて"
             },
             {
               "end": 8,
-              "lineId": "l_c2991a829a9644b9",
+              "lineId": "l_240af5ae892e5f5b",
               "start": 0,
-              "text": "高鳴る胸のリズム"
-            },
-            {
-              "end": 6,
-              "lineId": "l_dbf07d5a65f92de6",
-              "start": 0,
-              "text": "夜空を越えて"
-            },
-            {
-              "end": 7,
-              "lineId": "l_52ddfc76ee98f296",
-              "start": 0,
-              "text": "君を探している"
-            },
-            {
-              "end": 7,
-              "lineId": "l_5a3be99b6e2a31cc",
-              "start": 0,
-              "text": "月明かりだけが"
-            },
-            {
-              "end": 7,
-              "lineId": "l_c3d46ba681b48b73",
-              "start": 0,
-              "text": "ふたりを照らす"
-            },
-            {
-              "end": 9,
-              "lineId": "l_8cdfa20e40e896ad",
-              "start": 0,
-              "text": "この気持ち届けたい"
-            },
-            {
-              "end": 8,
-              "lineId": "l_34a929d8ea487dc2",
-              "start": 0,
-              "text": "今すぐ君のもとへ"
-            },
-            {
-              "end": 8,
-              "lineId": "l_9e326491c1dbfee6",
-              "start": 0,
-              "text": "あの日あの場所で"
-            },
-            {
-              "end": 6,
-              "lineId": "l_6ba3d49dca007d0d",
-              "start": 0,
-              "text": "交わした約束"
+              "text": "この声が届くまで"
             }
           ]
         }
       ],
-      "repetitionId": "rep_ec713e43ddcdd2cd"
+      "repetitionId": "rep_d322037f96c5966b"
     }
   ],
   "schema": "sakurauta.lyrics-grammar-analysis",
   "schemaVersion": 2,
   "source": {
-    "lineCount": 28,
+    "lineCount": 9,
     "lrcFile": "source.lrc",
-    "lrcProjectionHash": "sha256:cbe5e625a7b4c0aebe2a6afac1663e240f3ba75b1f631967e2189c22ac667e79",
-    "songId": "Fixture - Tokimeki Emotion",
+    "lrcProjectionHash": "sha256:b83ba56a5249f0785c5e9ec74859f31c22ac85718f75ee807cfab769364a4f3a",
+    "songId": "Fixture - Repetition Pattern",
     "sourceLanguages": [
       "ja"
     ]

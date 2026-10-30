@@ -71,7 +71,7 @@ add `endTimeMs` / `languageSpans`:
   "lineId": "l_...",
   "sourceOrder": 0,
   "timeMs": 1000,
-  "text": "ときめきエモーション",
+  "text": "夜明けの歌を君と歌う",
   "fingerprint": "sha256:...",
   "role": "text",
   "language": "ja",
@@ -114,7 +114,7 @@ The tool writes `repetition-candidates.json`. Copy each candidate's
           "lineId": "l_line1",
           "start": 0,
           "end": 10,
-          "text": "ときめきエモーション"
+          "text": "夜明けの歌を君と歌う"
         }
       ]
     }
@@ -187,7 +187,7 @@ its occurrences:
 ```json
 {
   "meaningUnitId": "mu_chorus_shared",
-  "text": "怦然心动，越过夜空寻找你。",
+  "text": "在黎明的歌声中，两人守着同一个约定。",
   "labels": [],
   "confidence": 0.94,
   "occurrences": [
@@ -199,7 +199,7 @@ its occurrences:
           "lineId": "l_chorus1_line1",
           "start": 0,
           "end": 10,
-          "text": "ときめきエモーション"
+          "text": "夜明けの歌を君と歌う"
         }
       ]
     },
@@ -211,7 +211,7 @@ its occurrences:
           "lineId": "l_chorus3_line1",
           "start": 0,
           "end": 10,
-          "text": "ときめきエモーション"
+          "text": "夜明けの歌を君と歌う"
         }
       ]
     }
@@ -243,7 +243,7 @@ Only an explicit occurrence override may change the effective text:
   ],
   "semanticOverride": {
     "reason": "该处重复后语气转为再次确认。",
-    "text": "再次确认，怦然心动。"
+    "text": "再次唱响时强调重新出发的决心。"
   }
 }
 ```
@@ -257,38 +257,38 @@ one block and one contiguous source span:
 
 ```json
 {
-  "phraseId": "p_tokimeki_emotion",
+  "phraseId": "p_dawn_song",
   "kind": "phrase",
-  "surface": "ときめきエモーション",
-  "role": "exclamatory_theme",
+  "surface": "夜明けの歌を君と歌う",
+  "role": "shared_theme",
   "labels": [
     {"namespace": "lang:ja", "key": "noun_phrase"}
   ],
-  "explanation": "把整句作为反复出现的主题短语。",
-  "gloss": "怦然心动的情绪",
+  "explanation": "把黎明、歌声与同行者连成一个完整画面。",
+  "gloss": "与你同唱黎明之歌",
   "confidence": 0.94,
   "occurrences": [
     {
-      "occurrenceId": "po_tokimeki_chorus1",
+      "occurrenceId": "po_dawn_song_1",
       "blockId": "b_chorus1",
       "sourceSegments": [
         {
           "lineId": "l_chorus1_line1",
           "start": 0,
           "end": 10,
-          "text": "ときめきエモーション"
+          "text": "夜明けの歌を君と歌う"
         }
       ]
     },
     {
-      "occurrenceId": "po_tokimeki_chorus3",
+      "occurrenceId": "po_dawn_song_3",
       "blockId": "b_chorus3",
       "sourceSegments": [
         {
           "lineId": "l_chorus3_line1",
           "start": 0,
           "end": 10,
-          "text": "ときめきエモーション"
+          "text": "夜明けの歌を君と歌う"
         }
       ]
     }
@@ -319,11 +319,11 @@ Relations connect canonical phrases:
 ```json
 {
   "relationId": "r_theme_follow",
-  "fromPhraseId": "p_search",
-  "toPhraseId": "p_tokimeki_emotion",
+  "fromPhraseId": "p_dawn_song",
+  "toPhraseId": "p_same_promise",
   "type": "develops_theme",
   "labels": [{"namespace": "syntax", "key": "theme_development"}],
-  "explanation": "寻找对方的动作展开前面的心动主题。",
+  "explanation": "歌唱的画面落到共同守护的约定上。",
   "confidence": 0.86
 }
 ```
@@ -334,8 +334,8 @@ Grammar notes and uncertainties use block arrays:
 {
   "scope": {
     "blockIds": ["b_chorus1", "b_chorus3"],
-    "phraseId": "p_tokimeki_emotion",
-    "occurrenceIds": ["po_tokimeki_chorus1", "po_tokimeki_chorus3"]
+    "phraseId": "p_dawn_song",
+    "occurrenceIds": ["po_dawn_song_1", "po_dawn_song_3"]
   }
 }
 ```

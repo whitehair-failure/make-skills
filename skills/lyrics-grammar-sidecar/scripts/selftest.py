@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import copy
 import os
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -60,6 +59,9 @@ from v2lib import (
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = SKILL_ROOT / "fixtures"
 GOLDEN_VECTORS = read_json(FIXTURES / "golden-vectors.json")
+REPETITION_DIR = FIXTURES / "repetition"
+REPETITION_SONG_ID = "Fixture - Repetition Pattern"
+REPETITION_BLOCK_IDS = ("b_repeat1", "b_repeat2", "b_repeat3")
 
 
 def labels(namespace: str, key: str) -> list[dict[str, str]]:
@@ -348,6 +350,120 @@ def two_block_repeat_document(
     )
 
 
+def repetition_projection() -> dict:
+    return source_projection_from_lrc(
+        REPETITION_DIR / "source.lrc",
+        REPETITION_SONG_ID,
+    )
+
+
+def stage_repetition_fixture(base: Path) -> dict[str, Any]:
+    source = base / "source.lrc"
+    source.write_bytes((REPETITION_DIR / "source.lrc").read_bytes())
+    projection = source_projection_from_lrc(source, REPETITION_SONG_ID)
+    projection_path = base / "source-projection.json"
+    write_json_atomic(projection_path, projection)
+
+    work = base / "source.grammar-work"
+    work.mkdir()
+    _translated, _manifest, issues = write_accepted_translation(
+        projection,
+        REPETITION_DIR / "translated.lrc",
+        work,
+    )
+    if issues:
+        raise AssertionError([issue.as_dict() for issue in issues])
+
+    draft = read_json(REPETITION_DIR / "semantic-draft.json")
+    draft_path = work / "semantic-draft.json"
+    write_json_atomic(draft_path, draft)
+    return {
+        "source": source,
+        "projection": projection,
+        "projection_path": projection_path,
+        "work": work,
+        "draft": draft,
+        "draft_path": draft_path,
+    }
+
+
+def build_repetition_ready_chain(base: Path) -> dict[str, Any]:
+    staged = stage_repetition_fixture(base)
+    candidate, prepare_report = prepare_semantic_candidate(
+        staged["source"],
+        staged["projection_path"],
+        staged["work"],
+        staged["draft_path"],
+        learner_language="zh-CN",
+    )
+    candidate_path = staged["work"] / "analysis-candidate.json"
+    candidate_hash_path = staged["work"] / "analysis-candidate.sha256"
+    frozen_candidate, candidate_hash = load_frozen_candidate(
+        candidate_path,
+        candidate_hash_path,
+    )
+    if frozen_candidate != candidate:
+        raise AssertionError("Prepared candidate did not round-trip canonically.")
+
+    audit = {
+        "schema": SEMANTIC_AUDIT_SCHEMA_ID,
+        "auditVersion": AUDIT_VERSION,
+        "candidateSha256": candidate_hash,
+        "learnerLanguage": "zh-CN",
+        "status": "pass",
+        "reviewedBlockIds": [
+            block["blockId"] for block in candidate["blocks"]
+        ],
+        "reviewedMeaningUnitIds": [
+            unit["meaningUnitId"] for unit in candidate["meaningUnits"]
+        ],
+        "findings": [],
+    }
+    audit_issues = validate_semantic_audit(
+        audit,
+        candidate,
+        candidate_hash,
+        "zh-CN",
+    )
+    if audit_issues:
+        raise AssertionError([issue.as_dict() for issue in audit_issues])
+    audit_path = staged["work"] / "semantic-audit.json"
+    write_json_atomic(audit_path, audit)
+
+    grammar_proof = build_isolation_proof_v2(
+        staged["projection"],
+        "grammar-analysis",
+        staged["draft_path"],
+        "native-subagent",
+        child_transcript_id="fixture-grammar-child",
+        parent_transcript_id="fixture-parent",
+    )
+    audit_proof = build_isolation_proof_v2(
+        staged["projection"],
+        "semantic-audit",
+        audit_path,
+        "native-subagent",
+        child_transcript_id="fixture-audit-child",
+        parent_transcript_id="fixture-parent",
+    )
+    grammar_proof_path = staged["work"] / "isolation-grammar-analysis.json"
+    audit_proof_path = staged["work"] / "isolation-semantic-audit.json"
+    write_json_atomic(grammar_proof_path, grammar_proof)
+    write_json_atomic(audit_proof_path, audit_proof)
+    return {
+        **staged,
+        "candidate": candidate,
+        "candidate_path": candidate_path,
+        "candidate_hash_path": candidate_hash_path,
+        "candidate_hash": candidate_hash,
+        "prepare_report": prepare_report,
+        "audit": audit,
+        "audit_path": audit_path,
+        "grammar_proof_path": grammar_proof_path,
+        "audit_proof_path": audit_proof_path,
+    }
+
+
 def issue_codes(issues) -> list[str]:
     return [issue.code for issue in issues]
 
@@ -563,16 +679,42 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             3,
-            GOLDEN_VECTORS["v2"]["tokimeki"]["sharedPrefixOccurrences"],
+            GOLDEN_VECTORS["v2"]["repetitionFixture"]["sharedPrefixOccurrences"],
+        )
+        self.assertEqual(
+            "repetition/source.lrc",
+            GOLDEN_VECTORS["v2"]["repetitionFixture"]["sourceLrc"],
+        )
+        self.assertEqual(
+            "repetition/sidecar.json",
+            GOLDEN_VECTORS["v2"]["repetitionFixture"]["fixture"],
+        )
+        self.assertEqual(
+            "repetition/semantic-draft.json",
+            GOLDEN_VECTORS["v2"]["repetitionFixture"]["semanticDraft"],
+        )
+        self.assertEqual(
+            "repetition/translated.lrc",
+            GOLDEN_VECTORS["v2"]["repetitionFixture"]["translatedLrc"],
         )
 
-    def test_repetition_candidate_golden_schema(self) -> None:
-        candidates = read_json(FIXTURES / "tokimeki" / "repetition-candidates.json")
+    def test_repetition_fixture_candidate_schema_and_completion(self) -> None:
+        projection = repetition_projection()
+        document = read_json(REPETITION_DIR / "sidecar.json")
+        candidates, issues = validate_repetition_completion(
+            document,
+            projection,
+            learner_language="zh-CN",
+        )
+        self.assertEqual([], issues)
         schema = load_v2_schema("repetition-candidates.schema.json")
         self.assertEqual([], validate_schema_instance(candidates, schema))
         self.assertEqual(2, len(candidates["candidates"]))
         self.assertTrue(
             any(len(item["occurrences"]) == 3 for item in candidates["candidates"])
+        )
+        self.assertTrue(
+            any(len(item["occurrences"]) == 2 for item in candidates["candidates"])
         )
 
     def test_committed_invalid_fixtures_are_v2_and_rejected(self) -> None:
@@ -698,7 +840,7 @@ class GrammarSidecarV2Tests(unittest.TestCase):
     def test_internal_whitespace_similarity_and_minimum_are_not_fuzzy(self) -> None:
         cases = [
             ("同じ 歌をうたう", "同じ歌をうたう"),
-            ("きらめきのうた", "ときめきのうた"),
+            ("かがやくうた", "かがやきうた"),
         ]
         for left, right in cases:
             with self.subTest(left=left, right=right):
@@ -898,8 +1040,8 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             lrc = Path(temp) / "shared.lrc"
             lrc.write_text(
-                "[00:01.00]ときめきエモーションときめきエモーション\n"
-                "[00:02.00]ときめきエモーションときめきエモーション\n",
+                "[00:01.00]夜明けの歌を君と歌う夜明けの歌を君と歌う\n"
+                "[00:02.00]夜明けの歌を君と歌う夜明けの歌を君と歌う\n",
                 encoding="utf-8",
             )
             projection = source_projection_from_lrc(lrc, "Fixture - Shared")
@@ -907,7 +1049,7 @@ class GrammarSidecarV2Tests(unittest.TestCase):
                 projection,
                 [projection["lines"][0:1], projection["lines"][1:2]],
             )
-            phrase_text = "ときめきエモーション"
+            phrase_text = "夜明けの歌を君と歌う"
             first_line = projection["lines"][0]
             second_line = projection["lines"][1]
             document["phrases"] = [
@@ -1211,34 +1353,24 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             ["unsupported_isolation_version"],
             issue_codes(proof_issues),
         )
-        with tempfile.TemporaryDirectory() as temp:
-            legacy_output = Path(temp) / "sidecar.json"
-            write_json_atomic(legacy_output, v1)
-            legacy_issues = validate_finalized_sidecar_v2(
-                FIXTURES / "tokimeki" / "source.lrc",
-                legacy_output,
-                FIXTURES / "tokimeki" / "source-projection.json",
-                FIXTURES / "tokimeki",
-                "zh-CN",
-            )
-        self.assert_issue(legacy_issues, "unsupported_schema_version")
 
     def test_finalizer_requires_replace_to_regenerate_v1_production(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
-            work = Path(temp) / "tokimeki"
-            shutil.copytree(FIXTURES / "tokimeki", work)
-            source = work / "source.lrc"
-            projection = work / "source-projection.json"
+            base = Path(temp)
+            chain = build_repetition_ready_chain(base)
+            source = chain["source"]
+            projection_path = chain["projection_path"]
+            work = chain["work"]
             legacy = {
                 "schema": "sakurauta.lyrics-grammar-analysis",
                 "schemaVersion": 1,
             }
-            output = work / "source.json"
+            output = base / "source.json"
             write_json_atomic(output, legacy)
             with self.assertRaises(SidecarError) as context:
                 finalize_sidecar_v2(
                     source,
-                    projection,
+                    projection_path,
                     work,
                     learner_language="zh-CN",
                 )
@@ -1246,7 +1378,7 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             self.assertIn("regenerate Schema v2", context.exception.message)
             regenerated, changed = finalize_sidecar_v2(
                 source,
-                projection,
+                projection_path,
                 work,
                 learner_language="zh-CN",
                 replace=True,
@@ -1561,80 +1693,27 @@ class GrammarSidecarV2Tests(unittest.TestCase):
     def test_full_staged_pipeline_atomic_writes_and_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             base = Path(temp)
-            source = base / "source.lrc"
-            source.write_bytes((FIXTURES / "ja" / "source.lrc").read_bytes())
-            translated_source = FIXTURES / "ja" / "translated.lrc"
-            projection = source_projection_from_lrc(
-                source, "Fixture - Japanese Promise"
+            chain = build_repetition_ready_chain(base)
+            source = chain["source"]
+            projection = chain["projection"]
+            projection_path = chain["projection_path"]
+            work = chain["work"]
+            draft = chain["draft"]
+            draft_path = chain["draft_path"]
+            candidate = chain["candidate"]
+            candidate_hash = chain["candidate_hash"]
+            self.assertEqual(
+                candidate,
+                read_json(REPETITION_DIR / "sidecar.json"),
             )
-            projection_path = base / "source-projection.json"
-            write_json_atomic(projection_path, projection)
-            work = base / "source.grammar-work"
-            work.mkdir()
-            _translated, _, issues = write_accepted_translation(
-                projection, translated_source, work
+            self.assertEqual(
+                [block["blockId"] for block in candidate["blocks"]],
+                list(REPETITION_BLOCK_IDS),
             )
-            self.assertEqual([], issues)
-            draft = simple_document(
-                projection,
-                source_language="ja",
-                learner_language="zh-CN",
-                meaning_text="你给我的约定，我至今仍记得。",
-                explanation="跨行短语构成完整回忆。",
-                gloss="你给你的小小约定",
-            )
-            draft_path = work / "semantic-draft.json"
-            write_json_atomic(draft_path, draft)
-
-            candidate, report = prepare_semantic_candidate(
-                source,
-                projection_path,
-                work,
-                draft_path,
-                learner_language="zh-CN",
-            )
-            candidate_path = work / "analysis-candidate.json"
-            hash_path = work / "analysis-candidate.sha256"
-            self.assertTrue(candidate_path.is_file())
-            self.assertTrue(hash_path.is_file())
-            self.assertEqual(sha256_file(candidate_path), report["candidateHash"])
-            loaded, candidate_hash = load_frozen_candidate(
-                candidate_path, hash_path
-            )
-            self.assertEqual(candidate, loaded)
-
-            audit = {
-                "schema": SEMANTIC_AUDIT_SCHEMA_ID,
-                "auditVersion": AUDIT_VERSION,
-                "candidateSha256": candidate_hash,
-                "learnerLanguage": "zh-CN",
-                "status": "pass",
-                "reviewedBlockIds": ["b_fixture"],
-                "reviewedMeaningUnitIds": ["mu_fixture"],
-                "findings": [],
-            }
-            audit_path = work / "semantic-audit.json"
-            write_json_atomic(audit_path, audit)
-            grammar_proof = build_isolation_proof_v2(
-                projection,
-                "grammar-analysis",
-                draft_path,
-                "native-subagent",
-                child_transcript_id="child-grammar",
-                parent_transcript_id="parent",
-            )
-            audit_proof = build_isolation_proof_v2(
-                projection,
-                "semantic-audit",
-                audit_path,
-                "native-subagent",
-                child_transcript_id="child-audit",
-                parent_transcript_id="parent",
-            )
-            grammar_proof_path = work / "isolation-grammar-analysis.json"
-            audit_proof_path = work / "isolation-semantic-audit.json"
-            write_json_atomic(grammar_proof_path, grammar_proof)
-            write_json_atomic(audit_proof_path, audit_proof)
+            audit = chain["audit"]
+            audit_path = chain["audit_path"]
+            grammar_proof_path = chain["grammar_proof_path"]
+            audit_proof_path = chain["audit_proof_path"]
 
             output, changed = finalize_sidecar_v2(
                 source,
@@ -1748,7 +1827,7 @@ class GrammarSidecarV2Tests(unittest.TestCase):
                 "semantic-audit",
                 audit_path,
                 "native-subagent",
-                child_transcript_id="child-grammar",
+                child_transcript_id="fixture-grammar-child",
                 parent_transcript_id="parent",
             )
             write_json_atomic(audit_proof_path, audit_proof, replace=True)
@@ -1854,17 +1933,14 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             self.assertEqual("candidate_hash_drift", context.exception.code)
 
     def test_frozen_candidate_must_use_canonical_bytes(self) -> None:
-        source_candidate = (
-            FIXTURES / "tokimeki" / "analysis-candidate.json"
-        )
-        source_hash = FIXTURES / "tokimeki" / "analysis-candidate.sha256"
         with tempfile.TemporaryDirectory() as temp:
-            candidate = Path(temp) / "analysis-candidate.json"
-            candidate_hash = Path(temp) / "analysis-candidate.sha256"
-            reformatted = source_candidate.read_bytes().replace(b"{\n", b"{\n ", 1)
-            self.assertNotEqual(source_candidate.read_bytes(), reformatted)
+            chain = build_repetition_ready_chain(Path(temp))
+            candidate = chain["candidate_path"]
+            candidate_hash = chain["candidate_hash_path"]
+            original = candidate.read_bytes()
+            reformatted = original.replace(b"{\n", b"{\n ", 1)
+            self.assertNotEqual(original, reformatted)
             candidate.write_bytes(reformatted)
-            shutil.copyfile(source_hash, candidate_hash)
             with self.assertRaises(SidecarError) as context:
                 load_frozen_candidate(candidate, candidate_hash)
         self.assertEqual("candidate_not_canonical", context.exception.code)
@@ -1986,22 +2062,31 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         )
         self.assertEqual(before, pretty_json(document))
 
-    def test_tokimeki_fixture_three_occurrences_changed_tail_and_override(self) -> None:
-        projection = source_projection_from_lrc(
-            FIXTURES / "tokimeki" / "source.lrc",
-            "Fixture - Tokimeki Emotion",
-        )
-        document = read_json(FIXTURES / "tokimeki" / "sidecar.json")
+    def test_repetition_fixture_three_occurrences_changed_tail_and_override(
+        self,
+    ) -> None:
         self.assertEqual(
-            projection,
-            read_json(FIXTURES / "tokimeki" / "source-projection.json"),
+            {
+                ".gitattributes",
+                "semantic-draft.json",
+                "sidecar.json",
+                "source.lrc",
+                "translated.lrc",
+            },
+            {path.name for path in REPETITION_DIR.iterdir()},
         )
+
+        projection = repetition_projection()
+        document = read_json(REPETITION_DIR / "sidecar.json")
+        draft = read_json(REPETITION_DIR / "semantic-draft.json")
+        self.assertEqual(document, draft)
+        self.assertEqual(source_object(projection, ["ja"]), document["source"])
         self.assert_valid(document, projection, "zh-CN")
         candidates, issues = validate_repetition_completion(
             document, projection, learner_language="zh-CN"
         )
         self.assertEqual([], issues)
-        prefix_text = "".join(line["text"] for line in projection["lines"][0:8])
+        prefix_text = "".join(line["text"] for line in projection["lines"][0:2])
         prefix_groups = [
             candidate
             for candidate in candidates["candidates"]
@@ -2010,7 +2095,7 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         ]
         self.assertTrue(prefix_groups)
         expected_tail_group = unicodedata.normalize(
-            "NFC", prefix_text + projection["lines"][8]["text"]
+            "NFC", prefix_text + projection["lines"][2]["text"]
         )
         tail_groups = [
             candidate
@@ -2027,11 +2112,11 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         shared_phrase = next(
             phrase
             for phrase in document["phrases"]
-            if phrase["phraseId"] == "p_tokimeki_emotion"
+            if phrase["phraseId"] == "p_dawn_song"
         )
         self.assertEqual(3, len(shared_phrase["occurrences"]))
         self.assertEqual(
-            {"b_chorus1", "b_chorus2", "b_chorus3"},
+            set(REPETITION_BLOCK_IDS),
             {occurrence["blockId"] for occurrence in shared_phrase["occurrences"]},
         )
         self.assertTrue(
@@ -2042,12 +2127,12 @@ class GrammarSidecarV2Tests(unittest.TestCase):
         )
         self.assertTrue(
             any(
-                note["scope"]["blockIds"] == ["b_chorus1", "b_chorus2", "b_chorus3"]
+                note["scope"]["blockIds"] == list(REPETITION_BLOCK_IDS)
                 for note in document["grammarNotes"]
             )
         )
         relation_ids = {relation["relationId"] for relation in document["relations"]}
-        self.assertIn("r_tokimeki_follow", relation_ids)
+        self.assertIn("r_shared_development", relation_ids)
         phrase_occurrence_counts = {
             phrase["phraseId"]: len(phrase["occurrences"])
             for phrase in document["phrases"]
@@ -2067,34 +2152,17 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             part["meaningUnitOccurrenceId"]
             for part in document["blocks"][2]["meaning"]["parts"]
         }
-        self.assertIn("muo_chorus1_tail_base", block1_parts)
-        self.assertIn("muo_chorus2_tail_base", block2_parts)
-        self.assertIn("muo_chorus2_tail_extra", block2_parts)
-        self.assertNotIn("muo_chorus2_tail_extra", block1_parts)
-        self.assertIn("muo_chorus3_tail", block3_parts)
-        self.assertNotIn("muo_chorus3_tail", block2_parts)
+        self.assertIn("muo_tail_base_1", block1_parts)
+        self.assertIn("muo_tail_base_2", block2_parts)
+        self.assertIn("muo_tail_extra_2", block2_parts)
+        self.assertNotIn("muo_tail_extra_2", block1_parts)
+        self.assertIn("muo_tail_alt_3", block3_parts)
+        self.assertNotIn("muo_tail_alt_3", block2_parts)
+        self.assertTrue(
+            projection["lines"][5]["text"].startswith(projection["lines"][2]["text"])
+        )
         tail_parts = document["blocks"][1]["meaning"]["parts"]
         self.assertGreaterEqual(len(tail_parts), 2)
-        self.assertEqual(
-            [],
-            validate_finalized_sidecar_v2(
-                FIXTURES / "tokimeki" / "source.lrc",
-                FIXTURES / "tokimeki" / "sidecar.json",
-                FIXTURES / "tokimeki" / "source-projection.json",
-                FIXTURES / "tokimeki",
-                "zh-CN",
-            ),
-        )
-        grammar_proof = read_json(
-            FIXTURES / "tokimeki" / "isolation-grammar-analysis.json"
-        )
-        audit_proof = read_json(
-            FIXTURES / "tokimeki" / "isolation-semantic-audit.json"
-        )
-        self.assertNotEqual(
-            grammar_proof["childTranscriptId"],
-            audit_proof["childTranscriptId"],
-        )
 
     def test_load_projection_exposes_invalid_projection(self) -> None:
         projection = source_projection_from_lrc(

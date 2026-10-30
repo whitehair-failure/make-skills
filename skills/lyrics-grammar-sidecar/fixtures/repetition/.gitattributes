@@ -1,4 +1,3 @@
-# Hash-bound fixture artifacts must retain their exact committed bytes.
+# Golden fixture artifacts must retain their exact committed bytes.
 *.json -text
-*.sha256 -text
 *.lrc -text
