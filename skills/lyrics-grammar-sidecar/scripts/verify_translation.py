@@ -11,7 +11,9 @@ from pathlib import Path
 from sidecarlib import (
     SidecarError,
     configure_utf8_stdio,
+    ensure_inside_workdir,
     load_projection,
+    read_json,
     sha256_file,
     verify_frozen_translation,
     write_accepted_translation,
@@ -46,18 +48,23 @@ def main() -> int:
         projection = load_projection(args.projection)
         workdir = args.workdir.expanduser().resolve()
         translated = workdir / "translated.lrc"
-        manifest_path = workdir / "translation-manifest.json"
+        manifest_path = ensure_inside_workdir(
+            workdir / "translation-manifest.json",
+            workdir,
+            "translation manifest",
+        )
         if args.verify_frozen:
             if not manifest_path.exists():
                 raise SidecarError(
                     "file_not_found", f"Manifest not found: {manifest_path}"
                 )
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            frozen_input = translated if translated.is_file() else args.accepted_lrc
-            report, issues = verify_frozen_translation(
-                projection, frozen_input, manifest
-            )
-            actual_hash = sha256_file(frozen_input) if frozen_input.is_file() else None
+            if not translated.is_file():
+                raise SidecarError(
+                    "file_not_found", f"Frozen translation not found: {translated}"
+                )
+            manifest = read_json(manifest_path)
+            report, issues = verify_frozen_translation(projection, translated, manifest)
+            actual_hash = sha256_file(translated)
         else:
             if translated.exists() or manifest_path.exists():
                 raise SidecarError(
@@ -69,7 +76,7 @@ def main() -> int:
             )
             report = dict(manifest)
             report["ok"] = not issues
-            actual_hash = manifest.get("translatedLrcSha256")
+            actual_hash = manifest["translatedLrcSha256"]
     except SidecarError as exc:
         print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
         return 2

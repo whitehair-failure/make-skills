@@ -2,7 +2,60 @@
   "contractVersions": {
     "projection": "sakurauta-lrc-text-projection-v1",
     "lineId": "sakurauta-lyric-line-id-v1",
-    "fingerprint": "sakurauta-lyric-text-fingerprint-v1"
+    "fingerprint": "sakurauta-lyric-text-fingerprint-v1",
+    "sidecar": 2,
+    "isolation": 2,
+    "semanticAudit": 1,
+    "repetitionCandidates": 1,
+    "minimumRepetitionCodePoints": 8
+  },
+  "v2": {
+    "analysisSchemaVersion": 2,
+    "meaningModel": "ordered-meaning-unit-occurrences",
+    "repetition": {
+      "minimumCodePoints": 8,
+      "normalization": "NFC",
+      "ignoreLineBoundaries": true,
+      "preserveInternalWhitespace": true,
+      "maximalExact": true,
+      "fuzzy": false,
+      "crossLineNfc": {
+        "fixture": "cross-line-nfc-composition",
+        "normalizedText": "caf\u00e9 emotion",
+        "rawParts": ["cafe", "\u0301 emotion"]
+      }
+    },
+    "tokimeki": {
+      "fixture": "tokimeki/sidecar.json",
+      "semanticDraft": "tokimeki/semantic-draft.json",
+      "analysisCandidate": "tokimeki/analysis-candidate.json",
+      "candidateHashFile": "tokimeki/analysis-candidate.sha256",
+      "translatedLrc": "tokimeki/translated.lrc",
+      "translationManifest": "tokimeki/translation-manifest.json",
+      "semanticAudit": "tokimeki/semantic-audit.json",
+      "grammarIsolation": "tokimeki/isolation-grammar-analysis.json",
+      "auditIsolation": "tokimeki/isolation-semantic-audit.json",
+      "sharedPrefixOccurrences": 3,
+      "changedTailOccurrences": 2,
+      "hasExplicitOverride": true,
+      "sharedPhraseId": "p_tokimeki_emotion",
+      "sharedRelationId": "r_tokimeki_follow"
+    },
+    "semanticAudit": {
+      "statuses": ["pass", "fail"],
+      "findingCodes": [
+        "unsupported-addition",
+        "translation-mismatch",
+        "shared-drift",
+        "coverage-gap",
+        "missing-source-evidence",
+        "other"
+      ]
+    },
+    "isolation": {
+      "stages": ["grammar-analysis", "semantic-audit"],
+      "distinctChildTranscripts": true
+    }
   },
   "fixtures": [
     {
@@ -52,6 +105,52 @@
         }
       ],
       "lrcProjectionHash": "sha256:155678eedeaf199773ecead5fc538d4d3a9bda5b999dfca1f5d292baa7d13ec9"
+    },
+    {
+      "name": "cross-line-nfc-composition",
+      "songId": "Cross-Repository Golden Song",
+      "lrc": "[00:01.00]cafe\n[00:02.00]\u0301 emotion\n[00:03.00]caf\u00e9 emotion\n",
+      "lines": [
+        {
+          "sourceOrder": 0,
+          "timeMs": 1000,
+          "sameTimestampOrdinal": 0,
+          "text": "cafe",
+          "lineId": "l_e4678cf043cb65c8",
+          "fingerprint": "sha256:fab2b0446f42bdbd4d9bda2cd71d25ef3702cbc90f894d1703e7169e54f7c3b4"
+        },
+        {
+          "sourceOrder": 1,
+          "timeMs": 2000,
+          "sameTimestampOrdinal": 0,
+          "text": "\u0301 emotion",
+          "lineId": "l_c88fc72437859b23",
+          "fingerprint": "sha256:290bd1aea7e5309366df9087182d59795d38b332ea6a61ef1f4716d1db94bec3"
+        },
+        {
+          "sourceOrder": 2,
+          "timeMs": 3000,
+          "sameTimestampOrdinal": 0,
+          "text": "caf\u00e9 emotion",
+          "lineId": "l_073164e6b94cc685",
+          "fingerprint": "sha256:0e2c3833c3faf2f22474deb42201fce06d1bc30696a60f205f5eaf44d2cf3bad"
+        }
+      ],
+      "lrcProjectionHash": "sha256:9caf0a6ccafa9093631ca8c8604f8d20ffbe518f99ca381c903aa7393872a8f9",
+      "segments": [
+        {
+          "lineIndex": 0,
+          "start": 0,
+          "end": 4,
+          "text": "cafe"
+        },
+        {
+          "lineIndex": 1,
+          "start": 0,
+          "end": 9,
+          "text": "\u0301 emotion"
+        }
+      ]
     },
     {
       "name": "unicode-code-point-segment",

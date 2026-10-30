@@ -1,40 +1,43 @@
 {
   "blocks": [
     {
-      "blockId": "b_main",
-      "confidence": 0.9,
+      "blockId": "b_fixture",
+      "confidence": 0.92,
       "endTimeMs": 11000,
-      "labels": [
-        {
-          "key": "minimal",
-          "namespace": "discourse"
-        }
-      ],
+      "labels": [],
       "lineIds": [
         "l_dd6729d66a8bf6f4",
         "l_2555b66844440f8e"
       ],
-      "meaning": "A door is kept open for an echo.",
+      "meaning": {
+        "parts": [
+          {
+            "meaningUnitOccurrenceId": "muo_fixture"
+          }
+        ]
+      },
       "startTimeMs": 9000
     }
   ],
   "extensions": {
-    "learnerLanguage": "en"
+    "learnerLanguage": "zh-CN"
   },
   "grammarNotes": [
     {
-      "confidence": 0.82,
-      "explanation": "The clause continues across lines.",
+      "confidence": 0.8,
+      "explanation": "两行共同表达留门等待回声的动作。",
       "labels": [
         {
-          "key": "cross_line",
+          "key": "fixture",
           "namespace": "syntax"
         }
       ],
-      "noteId": "g_main",
+      "noteId": "g_fixture",
       "scope": {
-        "blockId": "b_main",
-        "phraseId": "p_main"
+        "blockIds": [
+          "b_fixture"
+        ],
+        "phraseId": "p_fixture"
       }
     }
   ],
@@ -58,43 +61,75 @@
       "timeMs": 11000
     }
   ],
+  "meaningUnits": [
+    {
+      "confidence": 0.9,
+      "labels": [],
+      "meaningUnitId": "mu_fixture",
+      "occurrences": [
+        {
+          "blockId": "b_fixture",
+          "occurrenceId": "muo_fixture",
+          "sourceSegments": [
+            {
+              "end": 15,
+              "lineId": "l_dd6729d66a8bf6f4",
+              "start": 0,
+              "text": "I kept the door"
+            },
+            {
+              "end": 18,
+              "lineId": "l_2555b66844440f8e",
+              "start": 0,
+              "text": "open for your echo"
+            }
+          ]
+        }
+      ],
+      "text": "我为你留着那扇门，等待你的回声。"
+    }
+  ],
   "phrases": [
     {
-      "blockIds": [
-        "b_main"
-      ],
-      "confidence": 0.84,
-      "explanation": "The two lines form one complete expression.",
-      "gloss": "waiting for an echo",
+      "confidence": 0.9,
+      "explanation": "两行共同表达留门等待回声的动作。",
+      "gloss": "为你的回声留门",
       "kind": "phrase",
       "labels": [
         {
-          "key": "minimal",
-          "namespace": "lang:en"
+          "key": "shared_occurrence",
+          "namespace": "syntax"
         }
       ],
-      "phraseId": "p_main",
-      "role": "minimal_phrase",
-      "sourceSegments": [
+      "occurrences": [
         {
-          "end": 15,
-          "lineId": "l_dd6729d66a8bf6f4",
-          "start": 0,
-          "text": "I kept the door"
-        },
-        {
-          "end": 18,
-          "lineId": "l_2555b66844440f8e",
-          "start": 0,
-          "text": "open for your echo"
+          "blockId": "b_fixture",
+          "occurrenceId": "po_fixture",
+          "sourceSegments": [
+            {
+              "end": 15,
+              "lineId": "l_dd6729d66a8bf6f4",
+              "start": 0,
+              "text": "I kept the door"
+            },
+            {
+              "end": 18,
+              "lineId": "l_2555b66844440f8e",
+              "start": 0,
+              "text": "open for your echo"
+            }
+          ]
         }
       ],
+      "phraseId": "p_fixture",
+      "role": "shared_phrase",
       "surface": "I kept the dooropen for your echo"
     }
   ],
   "relations": [],
+  "repetitionGroups": [],
   "schema": "sakurauta.lyrics-grammar-analysis",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "lineCount": 2,
     "lrcFile": "source.lrc",

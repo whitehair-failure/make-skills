@@ -1,56 +1,45 @@
 {
   "blocks": [
     {
-      "blockId": "b_sentence",
-      "confidence": 0.94,
+      "blockId": "b_fixture",
+      "confidence": 0.92,
       "endTimeMs": 7000,
-      "labels": [
-        {
-          "key": "recollection",
-          "namespace": "discourse"
-        }
-      ],
+      "labels": [],
       "lineIds": [
         "l_b9a7b78579cb568f",
         "l_514ca07d16f17fd0",
         "l_7420f4f661e24064",
         "l_6886e9219b28383b"
       ],
-      "meaning": "你给我的那个小小约定，我至今仍记得。",
-      "register": "reflective",
+      "meaning": {
+        "parts": [
+          {
+            "meaningUnitOccurrenceId": "muo_fixture"
+          }
+        ]
+      },
       "startTimeMs": 1000
-    },
-    {
-      "blockId": "b_memory",
-      "confidence": 0.86,
-      "endTimeMs": 5000,
-      "labels": [
-        {
-          "key": "continuative",
-          "namespace": "aspect"
-        }
-      ],
-      "lineIds": [
-        "l_7420f4f661e24064"
-      ],
-      "meaning": "记忆状态从过去持续到现在。",
-      "startTimeMs": 5000
     }
   ],
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  },
   "grammarNotes": [
     {
-      "confidence": 0.86,
-      "explanation": "「覚えている」表示记忆状态持续。",
+      "confidence": 0.8,
+      "explanation": "前两行构成跨行名词短语，后两行回到同一段回忆。",
       "labels": [
         {
-          "key": "te_iru_continuative",
-          "namespace": "lang:ja"
+          "key": "fixture",
+          "namespace": "syntax"
         }
       ],
-      "noteId": "g_te_iru",
+      "noteId": "g_fixture",
       "scope": {
-        "blockId": "b_sentence",
-        "phraseId": "p_remember"
+        "blockIds": [
+          "b_fixture"
+        ],
+        "phraseId": "p_fixture"
       }
     }
   ],
@@ -92,110 +81,99 @@
       "timeMs": 7000
     }
   ],
-  "phrases": [
+  "meaningUnits": [
     {
-      "blockIds": [
-        "b_sentence"
-      ],
-      "confidence": 0.91,
-      "explanation": "「君がくれた」修饰跨行出现的「小さな約束」。",
-      "gloss": "你给我的那个小小约定",
-      "kind": "phrase",
-      "labels": [
+      "confidence": 0.9,
+      "labels": [],
+      "meaningUnitId": "mu_fixture",
+      "occurrences": [
         {
-          "key": "relative_clause",
-          "namespace": "lang:ja"
+          "blockId": "b_fixture",
+          "occurrenceId": "muo_fixture",
+          "sourceSegments": [
+            {
+              "end": 5,
+              "lineId": "l_b9a7b78579cb568f",
+              "start": 0,
+              "text": "君がくれた"
+            },
+            {
+              "end": 6,
+              "lineId": "l_514ca07d16f17fd0",
+              "start": 0,
+              "text": "小さな約束を"
+            },
+            {
+              "end": 8,
+              "lineId": "l_7420f4f661e24064",
+              "start": 0,
+              "text": "今でも覚えている"
+            },
+            {
+              "end": 5,
+              "lineId": "l_6886e9219b28383b",
+              "start": 0,
+              "text": "君がくれた"
+            }
+          ]
         }
       ],
-      "phraseId": "p_promise",
-      "role": "object_noun_phrase",
-      "sourceSegments": [
-        {
-          "end": 5,
-          "lineId": "l_b9a7b78579cb568f",
-          "start": 0,
-          "text": "君がくれた"
-        },
-        {
-          "end": 5,
-          "lineId": "l_514ca07d16f17fd0",
-          "start": 0,
-          "text": "小さな約束"
-        }
-      ],
-      "surface": "君がくれた小さな約束"
-    },
-    {
-      "blockIds": [
-        "b_sentence",
-        "b_memory"
-      ],
-      "confidence": 0.88,
-      "explanation": "持续体表达记忆状态仍在延续。",
-      "gloss": "至今仍记得",
-      "kind": "clause",
-      "labels": [
-        {
-          "key": "te_iru",
-          "namespace": "lang:ja"
-        }
-      ],
-      "phraseId": "p_remember",
-      "role": "predicate_clause",
-      "sourceSegments": [
-        {
-          "end": 8,
-          "lineId": "l_7420f4f661e24064",
-          "start": 0,
-          "text": "今でも覚えている"
-        }
-      ],
-      "surface": "今でも覚えている"
-    },
-    {
-      "blockIds": [
-        "b_sentence"
-      ],
-      "confidence": 0.83,
-      "explanation": "重复出现的短语与开头形成回环。",
-      "kind": "phrase",
-      "labels": [
-        {
-          "key": "repetition",
-          "namespace": "discourse"
-        }
-      ],
-      "phraseId": "p_repeat",
-      "role": "repeated_noun_phrase",
-      "sourceSegments": [
-        {
-          "end": 5,
-          "lineId": "l_6886e9219b28383b",
-          "start": 0,
-          "text": "君がくれた"
-        }
-      ],
-      "surface": "君がくれた"
+      "text": "你给我的那个小小约定，我至今仍记得。"
     }
   ],
-  "relations": [
+  "phrases": [
     {
-      "confidence": 0.87,
-      "explanation": "「覚えている」的对象是前面的约定。",
-      "fromPhraseId": "p_remember",
+      "confidence": 0.9,
+      "explanation": "前两行构成跨行名词短语，后两行回到同一段回忆。",
+      "gloss": "你给我的小小约定",
+      "kind": "phrase",
       "labels": [
         {
-          "key": "predicate_object",
+          "key": "shared_occurrence",
           "namespace": "syntax"
         }
       ],
-      "relationId": "r_object",
-      "toPhraseId": "p_promise",
-      "type": "governs"
+      "occurrences": [
+        {
+          "blockId": "b_fixture",
+          "occurrenceId": "po_fixture",
+          "sourceSegments": [
+            {
+              "end": 5,
+              "lineId": "l_b9a7b78579cb568f",
+              "start": 0,
+              "text": "君がくれた"
+            },
+            {
+              "end": 6,
+              "lineId": "l_514ca07d16f17fd0",
+              "start": 0,
+              "text": "小さな約束を"
+            },
+            {
+              "end": 8,
+              "lineId": "l_7420f4f661e24064",
+              "start": 0,
+              "text": "今でも覚えている"
+            },
+            {
+              "end": 5,
+              "lineId": "l_6886e9219b28383b",
+              "start": 0,
+              "text": "君がくれた"
+            }
+          ]
+        }
+      ],
+      "phraseId": "p_fixture",
+      "role": "shared_phrase",
+      "surface": "君がくれた小さな約束を今でも覚えている君がくれた"
     }
   ],
+  "relations": [],
+  "repetitionGroups": [],
   "schema": "sakurauta.lyrics-grammar-analysis",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "lineCount": 4,
     "lrcFile": "source.lrc",
@@ -205,23 +183,5 @@
       "ja"
     ]
   },
-  "extensions": {
-    "learnerLanguage": "zh-CN"
-  },
-  "uncertainties": [
-    {
-      "alternatives": [
-        "我",
-        "说话者",
-        "未明示主体"
-      ],
-      "confidence": 0.7,
-      "kind": "ambiguity",
-      "message": "日语省略了主语。",
-      "scope": {
-        "blockId": "b_sentence"
-      },
-      "uncertaintyId": "u_subject"
-    }
-  ]
+  "uncertainties": []
 }

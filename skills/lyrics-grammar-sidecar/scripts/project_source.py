@@ -9,6 +9,7 @@ from pathlib import Path
 
 from sidecarlib import (
     SidecarError,
+    assert_distinct_paths,
     configure_utf8_stdio,
     source_projection_from_lrc,
     write_json_atomic,
@@ -18,7 +19,7 @@ from sidecarlib import (
 def main() -> int:
     configure_utf8_stdio()
     parser = argparse.ArgumentParser(
-        description="Create a canonical LRC source projection (v1)."
+        description="Create the canonical LRC source projection used by Schema v2."
     )
     parser.add_argument("lrc", type=Path, help="Local source .lrc file")
     parser.add_argument(
@@ -44,10 +45,19 @@ def main() -> int:
 
     try:
         projection = source_projection_from_lrc(args.lrc, args.song_id)
-        output = args.output or (
-            args.lrc.resolve().parent
-            / f"{args.lrc.stem}.grammar-work"
-            / "source-projection.json"
+        source_path = args.lrc.expanduser().resolve()
+        output = (
+            args.output.expanduser()
+            if args.output is not None
+            else (
+                source_path.parent
+                / f"{args.lrc.stem}.grammar-work"
+                / "source-projection.json"
+            )
+        )
+        assert_distinct_paths(
+            ("source LRC", source_path),
+            ("source projection", output),
         )
         if args.require_app_projection:
             projection = {

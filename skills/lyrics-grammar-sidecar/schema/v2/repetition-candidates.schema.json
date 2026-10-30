@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sakurauta.app/schemas/lyrics-grammar-repetition-candidates/v1.json",
+  "title": "SakuraUta Lyrics Grammar Repetition Candidates",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "candidateVersion",
+    "sourceProjectionHash",
+    "minimumCodePoints",
+    "blocks",
+    "candidates"
+  ],
+  "properties": {
+    "schema": {"const": "sakurauta.lyrics-grammar-repetition-candidates"},
+    "candidateVersion": {"const": 1},
+    "sourceProjectionHash": {"$ref": "#/$defs/hash"},
+    "minimumCodePoints": {"const": 8},
+    "blocks": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/block"}
+    },
+    "candidates": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/candidate"}
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$"},
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lineId", "start", "end", "text"],
+      "properties": {
+        "lineId": {"$ref": "#/$defs/id"},
+        "start": {"type": "integer", "minimum": 0},
+        "end": {"type": "integer", "minimum": 1},
+        "text": {"type": "string", "minLength": 1}
+      }
+    },
+    "occurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["occurrenceId", "blockId", "sourceSegments"],
+      "properties": {
+        "occurrenceId": {"$ref": "#/$defs/id"},
+        "blockId": {"$ref": "#/$defs/id"},
+        "sourceSegments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/segment"}
+        }
+      }
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["blockId", "lineIds"],
+      "properties": {
+        "blockId": {"$ref": "#/$defs/id"},
+        "lineIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/id"}
+        }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repetitionId", "normalizedText", "occurrences"],
+      "properties": {
+        "repetitionId": {"$ref": "#/$defs/id"},
+        "normalizedText": {"type": "string", "minLength": 8},
+        "occurrences": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/occurrence"}
+        }
+      }
+    }
+  }
+}

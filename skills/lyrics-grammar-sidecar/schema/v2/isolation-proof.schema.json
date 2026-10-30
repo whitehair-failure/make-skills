@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sakurauta.app/schemas/lyrics-grammar-isolation-proof/v2.json",
+  "title": "SakuraUta Lyrics Grammar Isolation Proof v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "isolationVersion",
+    "stage",
+    "method",
+    "context",
+    "transcriptIsolated",
+    "childTranscriptId",
+    "parentTranscriptId",
+    "sourceProjectionHash",
+    "artifactSha256"
+  ],
+  "properties": {
+    "schema": {"const": "sakurauta.lyrics-grammar-isolation-proof"},
+    "isolationVersion": {"const": 2},
+    "stage": {"enum": ["grammar-analysis", "semantic-audit"]},
+    "method": {"enum": ["native-subagent", "codex-exec", "documented-harness"]},
+    "context": {"const": "non-forked-transcript"},
+    "transcriptIsolated": {"const": true},
+    "childTranscriptId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "parentTranscriptId": {
+      "type": ["string", "null"],
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "sourceProjectionHash": {"$ref": "#/$defs/hash"},
+    "artifactSha256": {"$ref": "#/$defs/hash"}
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+  }
+}

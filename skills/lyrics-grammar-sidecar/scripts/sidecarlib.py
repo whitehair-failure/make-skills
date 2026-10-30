@@ -1,43 +1,50 @@
 #!/usr/bin/env python3
 """Shared implementation for the lyrics grammar sidecar workflow.
 
-The module intentionally uses only the Python standard library.  It owns the
-canonical LRC projection, deterministic identities, schema validation,
-cross-reference validation, translation handoff checks, and atomic JSON writes.
+The module intentionally uses only the Python standard library. It owns the
+canonical LRC projection, deterministic identities, translation handoff
+checks, the closed schema-subset validator, and atomic JSON writes. Schema v2
+sidecar semantics are implemented in :mod:`v2lib`.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import re
 import sys
 import tempfile
 import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
-
+from typing import Any
 
 SIDECAR_SCHEMA_ID = "sakurauta.lyrics-grammar-analysis"
 PROJECTION_SCHEMA_ID = "sakurauta.lyrics-grammar-source-projection"
 MANIFEST_SCHEMA_ID = "sakurauta.lyrics-grammar-translation-manifest"
 ISOLATION_SCHEMA_ID = "sakurauta.lyrics-grammar-isolation-proof"
-SCHEMA_VERSION = 1
+SEMANTIC_AUDIT_SCHEMA_ID = "sakurauta.lyrics-grammar-semantic-audit"
+REPETITION_CANDIDATE_SCHEMA_ID = "sakurauta.lyrics-grammar-repetition-candidates"
+SCHEMA_VERSION = 2
 PROJECTION_VERSION = "sakurauta-lrc-text-projection-v1"
 LINE_ID_VERSION = "sakurauta-lyric-line-id-v1"
 FINGERPRINT_VERSION = "sakurauta-lyric-text-fingerprint-v1"
 MANIFEST_VERSION = 1
-ISOLATION_VERSION = 1
+AUDIT_VERSION = 1
+REPETITION_CANDIDATE_VERSION = 1
+ISOLATION_VERSION = 2
+MIN_REPETITION_CODE_POINTS = 8
 ISOLATION_METHODS = {"native-subagent", "codex-exec", "documented-harness"}
 ISOLATION_CONTEXT = "non-forked-transcript"
+ISOLATION_STAGES = {"grammar-analysis", "semantic-audit"}
 LEARNER_LANGUAGE_EXTENSION = "learnerLanguage"
 CJK_LEARNER_LANGUAGES = {"zh", "ja", "ko", "yue"}
 
 HASH_PATTERN = re.compile(r"\Asha256:[0-9a-f]{64}\Z")
 ID_PATTERN = re.compile(r"\A[a-z][a-z0-9_-]{2,63}\Z")
-LANGUAGE_PATTERN = re.compile(r"\A[a-z]{2,3}(?:-[A-Za-z0-9]+)*\Z")
 LRC_SUFFIX = ".lrc"
 LRC_LINE_RE = re.compile(r"^\[(\d{2}):([0-5]\d)(?:\.(\d{1,3}))?\]\s*(.*)$")
 CREDIT_LINE_PATTERNS = (
@@ -57,12 +64,15 @@ CREDIT_LINE_PATTERNS = (
 )
 HTML_TAG_RE = re.compile(r"</?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>]*)?/?>")
 HTML_DECL_RE = re.compile(r"<![A-Za-z]|<\?", re.IGNORECASE)
-HTML_ENTITY_RE = re.compile(r"&(?:#\d+|#x[0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]+);")
+HTML_COMMENT_RE = re.compile(r"<!--")
+HTML_ENTITY_RE = re.compile(r"&(?:#\d+|#[xX][0-9A-Fa-f]+|[A-Za-z][A-Za-z0-9]+);")
 FORBIDDEN_TRANSLATION_KEY_RE = re.compile(r"translat", re.IGNORECASE)
 ABSOLUTE_PATH_RE = re.compile(
     r"^(?:[A-Za-z]:[\\/]|\\\\|/(?:[^/\s]+/)+|file://)",
     re.IGNORECASE,
 )
+WINDOWS_ABSOLUTE_PATH_RE = re.compile(r"[A-Za-z]:[\\/]")
+FILE_URI_RE = re.compile(r"file://", re.IGNORECASE)
 REMOTE_PATH_RE = re.compile(r"^(?:https?|ftp|s3|gs|ssh|file):(?://|[\\/])", re.IGNORECASE)
 
 
@@ -89,6 +99,122 @@ class Issue:
         return {"code": self.code, "path": self.path, "message": self.message}
 
 
+class _DuplicateJsonKey(ValueError):
+    def __init__(self, key: str) -> None:
+        super().__init__(key)
+        self.key = key
+
+
+class _NonFiniteJsonNumber(ValueError):
+    def __init__(self, value: str) -> None:
+        super().__init__(value)
+        self.value = value
+
+
+def _reject_duplicate_json_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _DuplicateJsonKey(key)
+        result[key] = value
+    return result
+
+
+def _parse_finite_json_float(value: str) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise _NonFiniteJsonNumber(value)
+    return parsed
+
+
+def _reject_json_constant(value: str) -> None:
+    raise _NonFiniteJsonNumber(value)
+
+
+def _contains_surrogate(value: str) -> bool:
+    return any(0xD800 <= ord(char) <= 0xDFFF for char in value)
+
+
+def json_value_issues(value: Any, path: str = "$") -> list[Issue]:
+    """Return issues for Python values that cannot be represented as strict JSON."""
+
+    issues: list[Issue] = []
+    if isinstance(value, str):
+        if _contains_surrogate(value):
+            issues.append(
+                Issue(
+                    "invalid_unicode",
+                    path,
+                    "Unpaired UTF-16 surrogate code points are not valid UTF-8 text.",
+                )
+            )
+    elif isinstance(value, float) and not math.isfinite(value):
+        issues.append(Issue("invalid_number", path, "JSON numbers must be finite."))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            issues.extend(json_value_issues(item, f"{path}[{index}]"))
+    elif isinstance(value, dict):
+        for key, item in value.items():
+            if not isinstance(key, str):
+                issues.append(
+                    Issue("invalid_json_object", path, "JSON object keys must be strings.")
+                )
+                continue
+            key_path = f"{path}.{key}"
+            if _contains_surrogate(key):
+                issues.append(
+                    Issue(
+                        "invalid_unicode",
+                        key_path,
+                        "JSON object keys must not contain unpaired surrogate code points.",
+                    )
+                )
+            issues.extend(json_value_issues(item, key_path))
+    return issues
+
+
+def parse_json_bytes(data: bytes, label: str = "JSON") -> Any:
+    """Decode strict UTF-8 JSON without duplicate keys or non-finite numbers."""
+
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise SidecarError("invalid_utf8", f"File is not valid UTF-8: {label}") from exc
+    try:
+        value = json.loads(
+            text,
+            object_pairs_hook=_reject_duplicate_json_pairs,
+            parse_float=_parse_finite_json_float,
+            parse_constant=_reject_json_constant,
+        )
+    except _DuplicateJsonKey as exc:
+        raise SidecarError(
+            "invalid_json",
+            "$",
+            f"Duplicate JSON object key in {label}: {exc.key}",
+        ) from exc
+    except _NonFiniteJsonNumber as exc:
+        raise SidecarError(
+            "invalid_json",
+            "$",
+            f"Non-finite JSON number in {label}: {exc.value}",
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise SidecarError(
+            "invalid_json",
+            "$",
+            f"Invalid JSON in {label}: line {exc.lineno}, column {exc.colno}",
+        ) from exc
+    except (RecursionError, ValueError) as exc:
+        raise SidecarError("invalid_json", "$", f"Invalid JSON in {label}: {exc}") from exc
+
+    issues = json_value_issues(value)
+    if issues:
+        issue = issues[0]
+        raise SidecarError("invalid_json", issue.path, issue.message)
+    return value
+
+
 @dataclass(frozen=True)
 class LrcRow:
     line_number: int
@@ -97,29 +223,27 @@ class LrcRow:
     raw: str
 
 
-def default_schema_path() -> Path:
-    override = os.environ.get("LYRICS_GRAMMAR_SCHEMA")
-    if override:
-        return Path(override).expanduser().resolve()
-    return (
-        Path(__file__).resolve().parents[1]
-        / "schema"
-        / "v1"
-        / "lyrics-grammar-analysis.schema.json"
-    )
-
-
 def canonical_json(value: Any) -> str:
     return json.dumps(
         value,
         ensure_ascii=False,
         sort_keys=True,
         separators=(",", ":"),
+        allow_nan=False,
     )
 
 
 def pretty_json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2) + "\n"
+    return (
+        json.dumps(
+            value,
+            ensure_ascii=False,
+            sort_keys=True,
+            indent=2,
+            allow_nan=False,
+        )
+        + "\n"
+    )
 
 
 def configure_utf8_stdio() -> None:
@@ -134,11 +258,12 @@ def sha256_bytes(value: bytes) -> str:
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 
-def sha256_text(value: str) -> str:
-    return sha256_bytes(value.encode("utf-8"))
-
-
 def sha256_file(path: Path) -> str:
+    if path.is_symlink():
+        raise SidecarError(
+            "unsupported_source",
+            f"Symlinked files are not supported: {path}",
+        )
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
@@ -146,28 +271,74 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
-def read_json(path: Path) -> Any:
+def assert_distinct_paths(*paths: tuple[str, Path | None]) -> None:
+    """Reject aliases between readable artifacts and write destinations."""
+
+    seen: dict[str, str] = {}
+    for label, path in paths:
+        if path is None:
+            continue
+        resolved = path.expanduser().resolve()
+        key = os.path.normcase(str(resolved))
+        if key in seen:
+            raise SidecarError(
+                "artifact_path_collision",
+                "$",
+                f"{label} must not alias {seen[key]}.",
+            )
+        seen[key] = label
+
+
+def ensure_inside_workdir(path: Path, directory: Path, label: str) -> Path:
+    expanded = path.expanduser()
+    if expanded.is_symlink():
+        raise SidecarError(
+            "artifact_symlink",
+            "$",
+            f"{label} must not be a symlink.",
+        )
+    resolved = expanded.resolve()
+    root = directory.expanduser().resolve()
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise SidecarError(
+            "artifact_outside_workdir",
+            "$",
+            f"{label} must live inside the grammar work directory.",
+        ) from exc
+    return resolved
+
+
+def read_json(path: Path) -> Any:
+    if path.is_symlink():
+        raise SidecarError(
+            "unsupported_source",
+            f"Symlinked JSON inputs are not supported: {path}",
+        )
+    try:
+        data = path.read_bytes()
     except FileNotFoundError as exc:
         raise SidecarError("file_not_found", f"File not found: {path}") from exc
-    except UnicodeDecodeError as exc:
-        raise SidecarError("invalid_utf8", f"File is not valid UTF-8: {path}") from exc
-    except json.JSONDecodeError as exc:
-        raise SidecarError(
-            "invalid_json",
-            f"Invalid JSON in {path.name}: line {exc.lineno}, column {exc.colno}",
-        ) from exc
+    except OSError as exc:
+        raise SidecarError("file_read_failed", f"Could not read JSON file: {path}") from exc
+    return parse_json_bytes(data, path.name)
 
 
 def ensure_local_lrc(path: Path) -> Path:
     raw = str(path)
-    if REMOTE_PATH_RE.match(raw) or raw.startswith("\\\\"):
+    if REMOTE_PATH_RE.match(raw) or raw.startswith(("\\\\", "//")):
         raise SidecarError(
             "unsupported_source",
             "Remote and network-share inputs are not supported; use a local .lrc file.",
         )
-    resolved = path.expanduser().resolve()
+    expanded = path.expanduser()
+    if expanded.is_symlink():
+        raise SidecarError(
+            "unsupported_source",
+            "Symlinked LRC inputs are not supported.",
+        )
+    resolved = expanded.resolve()
     if resolved.suffix != LRC_SUFFIX:
         raise SidecarError(
             "unsupported_source",
@@ -176,6 +347,59 @@ def ensure_local_lrc(path: Path) -> Path:
     if not resolved.is_file():
         raise SidecarError("file_not_found", f"LRC file not found: {resolved}")
     return resolved
+
+
+def lrc_basename_issues(value: Any, path: str) -> list[Issue]:
+    if not isinstance(value, str) or not value:
+        return [
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must be a non-empty LRC basename.",
+            )
+        ]
+    issues: list[Issue] = []
+    if value in {".", ".."} or value.startswith("."):
+        issues.append(
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must name a visible sibling LRC file.",
+            )
+        )
+    if value != value.strip():
+        issues.append(
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must not begin or end with whitespace.",
+            )
+        )
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        issues.append(
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must not contain control characters.",
+            )
+        )
+    if any(char in '<>:"/\\|?*' for char in value):
+        issues.append(
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must be one portable Windows filename.",
+            )
+        )
+    if not value.endswith(LRC_SUFFIX):
+        issues.append(
+            Issue(
+                "invalid_lrc_basename",
+                path,
+                "lrcFile must end in .lrc.",
+            )
+        )
+    return issues
 
 
 def _timestamp_ms(minutes: str, seconds: str, fraction: str | None) -> int:
@@ -372,14 +596,7 @@ def validate_projection(projection: Any) -> list[Issue]:
 
     if "lrcFile" in projection:
         lrc_file = projection.get("lrcFile")
-        if not isinstance(lrc_file, str) or not lrc_file.endswith(LRC_SUFFIX):
-            issues.append(
-                Issue("invalid_projection", "$.lrcFile", "Expected an LRC basename.")
-            )
-        elif "/" in lrc_file or "\\" in lrc_file:
-            issues.append(
-                Issue("absolute_path", "$.lrcFile", "lrcFile must be a basename.")
-            )
+        issues.extend(lrc_basename_issues(lrc_file, "$.lrcFile"))
 
     lines = projection.get("lines")
     if not isinstance(lines, list) or not lines:
@@ -569,7 +786,7 @@ def verify_translation_handoff(
                     "unsupported_source_shape",
                     f"$lrc.line[{row.line_number}]",
                     "Multi-timestamp rows cannot be represented as a bilingual "
-                    "source/translation pair in v1.",
+                    "source/translation pair in the canonical handoff.",
                 )
             )
             break
@@ -720,7 +937,7 @@ def write_accepted_translation(
     manifest, issues = build_translation_manifest(projection, accepted_lrc)
     if issues:
         return translated_lrc, manifest, issues
-    translated_lrc.write_bytes(data)
+    _write_bytes_atomic(translated_lrc, data)
     if sha256_file(translated_lrc) != manifest["translatedLrcSha256"]:
         translated_lrc.unlink(missing_ok=True)
         return translated_lrc, manifest, [
@@ -747,7 +964,13 @@ def validate_manifest(manifest: Any) -> list[Issue]:
     }
     issues: list[Issue] = []
     if set(manifest) != required:
-        issues.append(Issue("invalid_manifest", "$", "Manifest fields do not match v1."))
+        issues.append(
+            Issue(
+                "invalid_manifest",
+                "$",
+                "Manifest fields do not match translation manifest v1.",
+            )
+        )
     if manifest.get("schema") != MANIFEST_SCHEMA_ID:
         issues.append(Issue("invalid_manifest", "$.schema", "Unexpected manifest schema."))
     if manifest.get("manifestVersion") != MANIFEST_VERSION:
@@ -774,135 +997,6 @@ def validate_manifest(manifest: Any) -> list[Issue]:
     if not isinstance(projection_hash, str) or HASH_PATTERN.fullmatch(projection_hash) is None:
         issues.append(
             Issue("invalid_manifest", "$.lrcProjectionHash", "Invalid projection hash.")
-        )
-    return issues
-
-
-def build_isolation_proof(
-    projection: dict[str, Any],
-    method: str,
-    *,
-    child_transcript_id: str | None = None,
-    parent_transcript_id: str | None = None,
-) -> dict[str, Any]:
-    if method not in ISOLATION_METHODS:
-        raise SidecarError(
-            "unsupported_isolation_method",
-            "Use native-subagent, codex-exec, or documented-harness.",
-        )
-    if not child_transcript_id:
-        raise SidecarError(
-            "missing_isolation_proof",
-            "A separate child transcript ID is required for formal generation.",
-        )
-    if parent_transcript_id and child_transcript_id == parent_transcript_id:
-        raise SidecarError(
-            "inline_generation",
-            "The analysis transcript must differ from the parent transcript.",
-        )
-    return {
-        "schema": ISOLATION_SCHEMA_ID,
-        "isolationVersion": ISOLATION_VERSION,
-        "method": method,
-        "context": ISOLATION_CONTEXT,
-        "transcriptIsolated": True,
-        "childTranscriptId": child_transcript_id,
-        "parentTranscriptId": parent_transcript_id,
-        "sourceProjectionHash": projection["lrcProjectionHash"],
-    }
-
-
-def validate_isolation_proof(
-    proof: Any,
-    projection: dict[str, Any] | None = None,
-    reject_forked: bool = True,
-) -> list[Issue]:
-    issues: list[Issue] = []
-    if not isinstance(proof, dict):
-        return [
-            Issue(
-                "missing_isolation_proof",
-                "$",
-                "Formal analysis requires a separate-transcript isolation proof.",
-            )
-        ]
-    allowed = {
-        "schema",
-        "isolationVersion",
-        "method",
-        "context",
-        "transcriptIsolated",
-        "childTranscriptId",
-        "parentTranscriptId",
-        "sourceProjectionHash",
-    }
-    for key in sorted(set(proof) - allowed):
-        issues.append(
-            Issue("invalid_isolation_proof", f"$.{key}", "Unknown isolation proof field.")
-        )
-    if proof.get("schema") != ISOLATION_SCHEMA_ID:
-        issues.append(
-            Issue("invalid_isolation_proof", "$.schema", "Unexpected isolation proof schema.")
-        )
-    if proof.get("isolationVersion") != ISOLATION_VERSION:
-        issues.append(
-            Issue(
-                "unsupported_isolation_version",
-                "$.isolationVersion",
-                "Expected isolation proof version 1.",
-            )
-        )
-    if proof.get("method") not in ISOLATION_METHODS:
-        issues.append(
-            Issue(
-                "unsupported_isolation_method",
-                "$.method",
-                "Unsupported isolation method.",
-            )
-        )
-    if proof.get("context") != ISOLATION_CONTEXT:
-        issues.append(
-            Issue(
-                "inline_generation",
-                "$.context",
-                "Formal analysis must run in a non-forked transcript.",
-            )
-        )
-    if proof.get("transcriptIsolated") is not True:
-        issues.append(
-            Issue(
-                "inline_generation",
-                "$.transcriptIsolated",
-                "Formal analysis cannot be generated inline.",
-            )
-        )
-    child = proof.get("childTranscriptId")
-    if not isinstance(child, str) or not child.strip():
-        issues.append(
-            Issue(
-                "missing_isolation_proof",
-                "$.childTranscriptId",
-                "A separate child transcript ID is required.",
-            )
-        )
-    parent = proof.get("parentTranscriptId")
-    if reject_forked and isinstance(child, str) and isinstance(parent, str) and child == parent:
-        issues.append(
-            Issue(
-                "inline_generation",
-                "$.childTranscriptId",
-                "The child transcript must differ from the parent transcript.",
-            )
-        )
-    if projection is not None and proof.get("sourceProjectionHash") != projection.get(
-        "lrcProjectionHash"
-    ):
-        issues.append(
-            Issue(
-                "stale_projection_hash",
-                "$.sourceProjectionHash",
-                "Isolation proof belongs to a different source projection.",
-            )
         )
     return issues
 
@@ -958,38 +1052,6 @@ def verify_frozen_translation(
     report["ok"] = not issues
     report["translatedLrcSha256"] = actual_hash
     return report, issues
-
-
-def verify_frozen_translation_files(
-    projection: dict[str, Any],
-    translated_lrc: Path,
-    manifest: dict[str, Any],
-    analysis_workdir: Path,
-) -> list[Issue]:
-    """Require the frozen translated LRC inside the documented work directory."""
-
-    issues: list[Issue] = []
-    workdir = analysis_workdir.expanduser().resolve()
-    if not workdir.is_dir():
-        return [
-            Issue(
-                "invalid_workdir",
-                "$workdir",
-                "The translation/analysis work directory does not exist.",
-            )
-        ]
-    translated = translated_lrc.expanduser().resolve()
-    try:
-        translated.relative_to(workdir)
-    except ValueError:
-        issues.append(
-            Issue(
-                "translation_outside_workdir",
-                "$translated",
-                "The frozen translation must live inside the documented work directory.",
-            )
-        )
-    return issues
 
 
 SUPPORTED_SCHEMA_KEYWORDS = {
@@ -1059,15 +1121,6 @@ def _walk_schema(schema: Any, path: str = "$schema") -> list[Issue]:
     return issues
 
 
-def load_schema(path: Path | None = None) -> dict[str, Any]:
-    schema_path = path or default_schema_path()
-    schema = read_json(schema_path)
-    issues = _walk_schema(schema)
-    if issues:
-        raise SidecarError(issues[0].code, issues[0].message, issues[0].path)
-    return schema
-
-
 def _json_type(value: Any) -> str:
     if value is None:
         return "null"
@@ -1131,8 +1184,12 @@ def validate_schema_instance(
     root_schema: dict[str, Any] | None = None,
     path: str = "$",
 ) -> list[Issue]:
-    """Validate the deliberately small, closed schema subset emitted by v1."""
+    """Validate the deliberately small, closed schema subset used by v2."""
 
+    if root_schema is None:
+        value_issues = json_value_issues(instance, path=path)
+        if value_issues:
+            return value_issues
     root = root_schema or schema
     issues: list[Issue] = []
 
@@ -1259,944 +1316,13 @@ def validate_schema_instance(
     return issues
 
 
-def _iter_strings(value: Any, path: str = "$") -> Iterable[tuple[str, str]]:
-    if isinstance(value, str):
-        yield path, value
-    elif isinstance(value, list):
-        for index, item in enumerate(value):
-            yield from _iter_strings(item, f"{path}[{index}]")
-    elif isinstance(value, dict):
-        for key, item in value.items():
-            yield from _iter_strings(item, f"{path}.{key}")
-
-
-def _iter_keys(value: Any, path: str = "$") -> Iterable[tuple[str, str]]:
-    if isinstance(value, dict):
-        for key, item in value.items():
-            yield path, key
-            yield from _iter_keys(item, f"{path}.{key}")
-    elif isinstance(value, list):
-        for index, item in enumerate(value):
-            yield from _iter_keys(item, f"{path}[{index}]")
-
-
-def _as_object_list(document: dict[str, Any], key: str) -> list[dict[str, Any]]:
-    value = document.get(key)
-    if not isinstance(value, list):
-        return []
-    return [item for item in value if isinstance(item, dict)]
-
-
-def _unique_by_id(
-    entities: Sequence[dict[str, Any]],
-    id_key: str,
-    collection: str,
-    issues: list[Issue],
-) -> dict[str, dict[str, Any]]:
-    result: dict[str, dict[str, Any]] = {}
-    for index, entity in enumerate(entities):
-        entity_id = entity.get(id_key)
-        if not isinstance(entity_id, str):
-            continue
-        if entity_id in result:
-            issues.append(
-                Issue(
-                    "duplicate_id",
-                    f"$.{collection}[{index}].{id_key}",
-                    f"Duplicate {id_key}: {entity_id}",
-                )
-            )
-        else:
-            result[entity_id] = entity
-    return result
-
-
-def _check_html_and_paths(document: dict[str, Any], issues: list[Issue]) -> None:
-    for path, text in _iter_strings(document):
-        lower_path = path.lower()
-        if (
-            "<!doctype" in text.lower()
-            or "<![cdata[" in text.lower()
-            or "<?xml" in text.lower()
-            or HTML_DECL_RE.search(text)
-            or HTML_TAG_RE.search(text)
-            or HTML_ENTITY_RE.search(text)
-        ):
-            issues.append(Issue("html_content", path, "Inline HTML is not allowed."))
-        if path.endswith(".lrcFile") and ("/" in text or "\\" in text):
-            issues.append(Issue("absolute_path", path, "lrcFile must be a basename."))
-        if ABSOLUTE_PATH_RE.match(text) and (
-            "path" in lower_path
-            or "file" in lower_path
-            or text.lower().startswith("file://")
-        ):
-            issues.append(Issue("absolute_path", path, "Absolute paths are not allowed."))
-
-    for path, key in _iter_keys(document):
-        if FORBIDDEN_TRANSLATION_KEY_RE.search(key) and key != "kind":
-            issues.append(
-                Issue(
-                    "per_line_translation",
-                    f"{path}.{key}",
-                    "Per-line translation fields are not allowed in the sidecar.",
-                )
-            )
-
-
-def _check_labels(labels: Any, path: str, issues: list[Issue]) -> None:
-    if not isinstance(labels, list):
-        return
-    for index, label in enumerate(labels):
-        if not isinstance(label, dict):
-            continue
-        namespace = label.get("namespace")
-        key = label.get("key")
-        if not isinstance(namespace, str) or not namespace:
-            issues.append(
-                Issue("missing_namespace", f"{path}[{index}].namespace", "Missing label namespace.")
-            )
-        if not isinstance(key, str) or not key:
-            issues.append(Issue("missing_label_key", f"{path}[{index}].key", "Missing label key."))
-
-
-def _check_scope(
-    scope: Any,
-    path: str,
-    blocks: dict[str, dict[str, Any]],
-    phrases: dict[str, dict[str, Any]],
-    issues: list[Issue],
-) -> None:
-    if not isinstance(scope, dict):
-        return
-    block_id = scope.get("blockId")
-    phrase_id = scope.get("phraseId")
-    if not isinstance(block_id, str):
-        issues.append(Issue("missing_scope_block", path + ".blockId", "Missing block scope."))
-        return
-    if isinstance(block_id, str) and block_id not in blocks:
-        issues.append(Issue("unresolved_block", path + ".blockId", f"Unknown block: {block_id}"))
-    if isinstance(phrase_id, str):
-        phrase = phrases.get(phrase_id)
-        if phrase is None:
-            issues.append(
-                Issue("unresolved_phrase", path + ".phraseId", f"Unknown phrase: {phrase_id}")
-            )
-        elif isinstance(block_id, str) and block_id not in phrase.get("blockIds", []):
-            issues.append(
-                Issue(
-                    "phrase_block_mismatch",
-                    path + ".phraseId",
-                    "Scoped phrase does not belong to the scoped block.",
-                )
-            )
-
-
-def _check_source_filename(
-    source: Any, issues: list[Issue]
-) -> None:
-    if not isinstance(source, dict):
-        return
-    lrc_file = source.get("lrcFile")
-    if not isinstance(lrc_file, str) or not lrc_file:
-        return
-    if lrc_file in {".", ".."} or lrc_file.startswith("."):
-        issues.append(
-            Issue(
-                "invalid_lrc_basename",
-                "$.source.lrcFile",
-                "lrcFile must name a visible sibling LRC file.",
-            )
-        )
-    if not lrc_file.lower().endswith(LRC_SUFFIX):
-        issues.append(
-            Issue(
-                "invalid_lrc_basename",
-                "$.source.lrcFile",
-                "lrcFile must end in .lrc.",
-            )
-        )
-    if "\x00" in lrc_file:
-        issues.append(
-            Issue(
-                "invalid_lrc_basename",
-                "$.source.lrcFile",
-                "lrcFile must not contain a NUL character.",
-            )
-        )
-
-
-def _check_entity_ids(document: dict[str, Any], issues: list[Issue]) -> None:
-    collections = {
-        "lines": "lineId",
-        "blocks": "blockId",
-        "phrases": "phraseId",
-        "relations": "relationId",
-        "grammarNotes": "noteId",
-        "uncertainties": "uncertaintyId",
-    }
-    seen: dict[str, str] = {}
-    for collection, id_key in collections.items():
-        values = document.get(collection)
-        if not isinstance(values, list):
-            continue
-        for index, entity in enumerate(values):
-            if not isinstance(entity, dict):
-                continue
-            entity_id = entity.get(id_key)
-            if not isinstance(entity_id, str):
-                continue
-            if not ID_PATTERN.fullmatch(entity_id):
-                issues.append(
-                    Issue(
-                        "invalid_id",
-                        f"$.{collection}[{index}].{id_key}",
-                        "Entity ID is not in canonical form.",
-                    )
-                )
-            if entity_id in seen:
-                issues.append(
-                    Issue(
-                        "duplicate_id",
-                        f"$.{collection}[{index}].{id_key}",
-                        f"Entity ID already used by {seen[entity_id]}.",
-                    )
-                )
-            else:
-                seen[entity_id] = collection
-
-
-def _check_features_are_namespaced(document: dict[str, Any], issues: list[Issue]) -> None:
-    """Reject accidental language-specific top-level entity fields.
-
-    Prose answers stay in meaning/explanation/gloss; classification goes in
-    labels. Fields such as ja_particle, object_marker, or tense are allowed
-    only as label keys, not ad-hoc schema fields.
-    """
-
-    collections = ("blocks", "phrases", "relations", "grammarNotes", "uncertainties")
-    for collection in collections:
-        values = document.get(collection)
-        if not isinstance(values, list):
-            continue
-        for index, entity in enumerate(values):
-            if not isinstance(entity, dict):
-                continue
-            for key in entity:
-                if (
-                    "_" in key
-                    or "." in key
-                    or re.match(r"^(?:ja|ko|zh|en)[A-Z]", key) is not None
-                ):
-                    issues.append(
-                        Issue(
-                            "unnamespaced_feature",
-                            f"$.{collection}[{index}].{key}",
-                            "Language-specific or dotted feature fields must be represented "
-                            "as namespaced labels.",
-                        )
-                    )
-
-
-def validate_sidecar_semantics(
-    document: Any,
-    projection: dict[str, Any] | None = None,
-    expected_lrc_file: str | None = None,
-) -> list[Issue]:
-    if not isinstance(document, dict):
-        return [Issue("invalid_sidecar", "$", "Sidecar must be a JSON object.")]
-
-    issues: list[Issue] = []
-    _check_html_and_paths(document, issues)
-    _check_entity_ids(document, issues)
-    _check_features_are_namespaced(document, issues)
-
-    source = document.get("source")
-    _check_source_filename(source, issues)
-    if isinstance(source, dict):
-        source_languages = source.get("sourceLanguages")
-        if isinstance(source_languages, list):
-            if len(set(item for item in source_languages if isinstance(item, str))) != len(
-                source_languages
-            ):
-                issues.append(
-                    Issue(
-                        "duplicate_language",
-                        "$.source.sourceLanguages",
-                        "sourceLanguages must not contain duplicates.",
-                    )
-                )
-        lrc_file = source.get("lrcFile")
-        if isinstance(lrc_file, str):
-            if "/" in lrc_file or "\\" in lrc_file:
-                issues.append(
-                    Issue("absolute_path", "$.source.lrcFile", "lrcFile must be a basename.")
-                )
-            if expected_lrc_file is not None and lrc_file != expected_lrc_file:
-                issues.append(
-                    Issue(
-                        "lrc_file_mismatch",
-                        "$.source.lrcFile",
-                        f"Expected {expected_lrc_file}, got {lrc_file}.",
-                    )
-                )
-    else:
-        source_languages = None
-
-    lines = _as_object_list(document, "lines")
-    line_by_id = _unique_by_id(lines, "lineId", "lines", issues)
-    source_orders: set[int] = set()
-    for index, line in enumerate(lines):
-        path = f"$.lines[{index}]"
-        source_order = line.get("sourceOrder")
-        if isinstance(source_order, int) and not isinstance(source_order, bool):
-            if source_order in source_orders:
-                issues.append(
-                    Issue("duplicate_source_order", path + ".sourceOrder", "Duplicate sourceOrder.")
-                )
-            source_orders.add(source_order)
-        text = line.get("text")
-        if not isinstance(text, str) or not text:
-            continue
-        if isinstance(source_languages, list):
-            language = line.get("language")
-            if isinstance(language, str) and language not in source_languages:
-                issues.append(
-                    Issue(
-                        "unknown_line_language",
-                        path + ".language",
-                        "Line language is absent from sourceLanguages.",
-                    )
-                )
-        spans = line.get("languageSpans")
-        if isinstance(spans, list):
-            previous_end = -1
-            for span_index, span in enumerate(spans):
-                if not isinstance(span, dict):
-                    continue
-                start = span.get("start")
-                end = span.get("end")
-                span_path = f"{path}.languageSpans[{span_index}]"
-                if (
-                    not isinstance(start, int)
-                    or isinstance(start, bool)
-                    or not isinstance(end, int)
-                    or isinstance(end, bool)
-                    or start < 0
-                    or end <= start
-                    or end > len(text)
-                ):
-                    issues.append(
-                        Issue(
-                            "invalid_codepoint_span",
-                            span_path,
-                            "Language span is outside the line's Unicode code-point range.",
-                        )
-                    )
-                    continue
-                if start < previous_end:
-                    issues.append(
-                        Issue(
-                            "overlapping_language_span",
-                            span_path,
-                            "Language spans on a line must not overlap.",
-                        )
-                    )
-                previous_end = max(previous_end, end)
-                if (
-                    isinstance(source_languages, list)
-                    and span.get("language") not in source_languages
-                ):
-                    issues.append(
-                        Issue(
-                            "unknown_span_language",
-                            span_path + ".language",
-                            "Span language is absent from sourceLanguages.",
-                        )
-                    )
-
-    if projection is not None and isinstance(source, dict):
-        if source.get("songId") != projection.get("songId"):
-            issues.append(
-                Issue(
-                    "source_song_mismatch",
-                    "$.source.songId",
-                    "Sidecar songId does not match the source projection.",
-                )
-            )
-        if source.get("lrcProjectionHash") != projection.get("lrcProjectionHash"):
-            issues.append(
-                Issue(
-                    "stale_projection_hash",
-                    "$.source.lrcProjectionHash",
-                    "Sidecar lrcProjectionHash does not match the accepted source projection.",
-                )
-            )
-        if source.get("lineCount") != projection.get("lineCount"):
-            issues.append(
-                Issue(
-                    "line_count_mismatch",
-                    "$.source.lineCount",
-                    "Sidecar lineCount does not match the source projection.",
-                )
-            )
-        if (
-            projection.get("lrcFile") is not None
-            and source.get("lrcFile") != projection.get("lrcFile")
-        ):
-            issues.append(
-                Issue(
-                    "lrc_file_mismatch",
-                    "$.source.lrcFile",
-                    "Sidecar lrcFile does not match the source projection.",
-                )
-            )
-
-        projected = projection.get("lines", [])
-        projected_by_id = {
-            item["lineId"]: item for item in projected if isinstance(item, dict)
-        }
-        if len(lines) != len(projected):
-            issues.append(
-                Issue(
-                    "line_coverage",
-                    "$.lines",
-                    f"Expected {len(projected)} projected source lines, got {len(lines)}.",
-                )
-            )
-        for index, projected_line in enumerate(projected):
-            line_id = projected_line["lineId"]
-            actual = line_by_id.get(line_id)
-            if actual is None:
-                issues.append(
-                    Issue(
-                        "line_coverage",
-                        f"$.lines[{index}]",
-                        f"Missing projected source line: {line_id}",
-                    )
-                )
-                continue
-            for field in ("lineId", "sourceOrder", "timeMs", "text", "fingerprint"):
-                if actual.get(field) != projected_line[field]:
-                    issues.append(
-                        Issue(
-                            "stale_source_projection",
-                            f"$.lines[{index}].{field}",
-                            f"Line {field} does not match the source projection.",
-                        )
-                    )
-            if actual.get("role") != "text":
-                issues.append(
-                    Issue(
-                        "invalid_line_role",
-                        f"$.lines[{index}].role",
-                        "Only source text lines are allowed.",
-                    )
-                )
-        for line_id, actual in line_by_id.items():
-            if line_id not in projected_by_id:
-                issues.append(
-                    Issue(
-                        "unknown_source_line",
-                        f"$.lines[{actual.get('sourceOrder', '?')}]",
-                        f"Sidecar line is absent from the source projection: {line_id}",
-                    )
-                )
-
-    blocks_list = _as_object_list(document, "blocks")
-    phrases_list = _as_object_list(document, "phrases")
-    relations_list = _as_object_list(document, "relations")
-    notes_list = _as_object_list(document, "grammarNotes")
-    uncertainties_list = _as_object_list(document, "uncertainties")
-    blocks = _unique_by_id(blocks_list, "blockId", "blocks", issues)
-    phrases = _unique_by_id(phrases_list, "phraseId", "phrases", issues)
-    relations = _unique_by_id(relations_list, "relationId", "relations", issues)
-    _unique_by_id(notes_list, "noteId", "grammarNotes", issues)
-    _unique_by_id(uncertainties_list, "uncertaintyId", "uncertainties", issues)
-
-    block_line_ids: dict[str, list[str]] = {}
-    all_block_line_ids: set[str] = set()
-    for index, block in enumerate(blocks_list):
-        path = f"$.blocks[{index}]"
-        _check_labels(block.get("labels"), path + ".labels", issues)
-        line_ids = block.get("lineIds")
-        if not isinstance(line_ids, list) or not line_ids:
-            issues.append(Issue("empty_block", path + ".lineIds", "Block must reference a line."))
-            continue
-        block_line_ids[str(block.get("blockId"))] = [
-            item for item in line_ids if isinstance(item, str)
-        ]
-        resolved_lines: list[dict[str, Any]] = []
-        block_lines: list[tuple[int, int]] = []
-        for line_index, line_id in enumerate(line_ids):
-            if not isinstance(line_id, str):
-                continue
-            if line_id not in line_by_id:
-                issues.append(
-                    Issue(
-                        "unresolved_line",
-                        f"{path}.lineIds[{line_index}]",
-                        f"Unknown source line: {line_id}",
-                    )
-                )
-            else:
-                all_block_line_ids.add(line_id)
-                resolved_lines.append(line_by_id[line_id])
-                line_time = line_by_id[line_id].get("timeMs")
-                order = line_by_id[line_id].get("sourceOrder")
-                if (
-                    isinstance(line_time, int)
-                    and not isinstance(line_time, bool)
-                    and isinstance(order, int)
-                    and not isinstance(order, bool)
-                ):
-                    block_lines.append((order, line_time))
-        line_order = [order for order, _ in block_lines]
-        if line_order != sorted(line_order):
-            issues.append(
-                Issue(
-                    "non_monotonic_block",
-                    path + ".lineIds",
-                    "Block lineIds do not follow sourceOrder.",
-                )
-            )
-        current_times = [time for _, time in block_lines]
-        if current_times != sorted(current_times):
-            issues.append(
-                Issue(
-                    "non_monotonic_block",
-                    path + ".lineIds",
-                    "Block line timestamps decrease as source order advances.",
-                )
-            )
-        start_time = block.get("startTimeMs")
-        end_time = block.get("endTimeMs")
-        if (
-            isinstance(start_time, int)
-            and not isinstance(start_time, bool)
-            and isinstance(end_time, int)
-            and not isinstance(end_time, bool)
-        ):
-            if end_time < start_time:
-                issues.append(
-                    Issue("invalid_time_range", path, "Block endTimeMs precedes startTimeMs.")
-                )
-            for line in resolved_lines:
-                line_time = line.get("timeMs")
-                if (
-                    isinstance(line_time, int)
-                    and not isinstance(line_time, bool)
-                    and not (start_time <= line_time <= end_time)
-                ):
-                    issues.append(
-                        Issue(
-                            "block_time_coverage",
-                            path,
-                            f"Block time range excludes line {line.get('lineId')}.",
-                        )
-                    )
-
-    if isinstance(source, dict):
-        for line_id in line_by_id:
-            if line_id not in all_block_line_ids:
-                issues.append(
-                    Issue(
-                        "uncovered_source_line",
-                        "$.blocks",
-                        f"Source line is not covered by any block: {line_id}",
-                    )
-                )
-
-    for index, phrase in enumerate(phrases_list):
-        path = f"$.phrases[{index}]"
-        _check_labels(phrase.get("labels"), path + ".labels", issues)
-        block_ids = phrase.get("blockIds")
-        resolved_block_ids: set[str] = set()
-        if not isinstance(block_ids, list) or not block_ids:
-            issues.append(
-                Issue("empty_phrase_blocks", path + ".blockIds", "Phrase must reference a block.")
-            )
-        else:
-            for block_index, block_id in enumerate(block_ids):
-                if not isinstance(block_id, str):
-                    continue
-                if block_id not in blocks:
-                    issues.append(
-                        Issue(
-                            "unresolved_block",
-                            f"{path}.blockIds[{block_index}]",
-                            f"Unknown block: {block_id}",
-                        )
-                    )
-                else:
-                    resolved_block_ids.add(block_id)
-            if len(resolved_block_ids) != len(block_ids):
-                issues.append(
-                    Issue(
-                        "duplicate_block_reference",
-                        path + ".blockIds",
-                        "Phrase blockIds must be unique and resolvable.",
-                    )
-                )
-
-        segments = phrase.get("sourceSegments")
-        segment_texts: list[str] = []
-        previous_order = -1
-        previous_start = -1
-        if not isinstance(segments, list) or not segments:
-            issues.append(
-                Issue(
-                    "empty_phrase_segments",
-                    path + ".sourceSegments",
-                    "Phrase must reference source text.",
-                )
-            )
-            continue
-        for segment_index, segment in enumerate(segments):
-            segment_path = f"{path}.sourceSegments[{segment_index}]"
-            if not isinstance(segment, dict):
-                continue
-            line_id = segment.get("lineId")
-            line = line_by_id.get(line_id) if isinstance(line_id, str) else None
-            if line is None:
-                issues.append(
-                    Issue(
-                        "unresolved_line",
-                        segment_path + ".lineId",
-                        f"Unknown source line: {line_id}",
-                    )
-                )
-                continue
-            source_order = line.get("sourceOrder")
-            if isinstance(source_order, int) and not isinstance(source_order, bool):
-                if source_order < previous_order:
-                    issues.append(
-                        Issue(
-                            "segment_order",
-                            segment_path,
-                            "Phrase segments must follow source line order.",
-                        )
-                    )
-                if source_order == previous_order:
-                    start_value = segment.get("start")
-                    if (
-                        isinstance(start_value, int)
-                        and not isinstance(start_value, bool)
-                        and start_value <= previous_start
-                    ):
-                        issues.append(
-                            Issue(
-                                "segment_overlap",
-                                segment_path,
-                                "Segments on the same line must not overlap or repeat.",
-                            )
-                        )
-                    if isinstance(start_value, int):
-                        previous_start = start_value
-                else:
-                    previous_order = source_order
-                    start_value = segment.get("start")
-                    previous_start = (
-                        start_value
-                        if isinstance(start_value, int) and not isinstance(start_value, bool)
-                        else -1
-                    )
-
-            line_text = line.get("text")
-            start = segment.get("start")
-            end = segment.get("end")
-            segment_text = segment.get("text")
-            if (
-                not isinstance(line_text, str)
-                or not isinstance(start, int)
-                or isinstance(start, bool)
-                or not isinstance(end, int)
-                or isinstance(end, bool)
-                or start < 0
-                or end <= start
-                or end > len(line_text)
-            ):
-                issues.append(
-                    Issue(
-                        "invalid_codepoint_span",
-                        segment_path,
-                        "Segment is outside the source line's Unicode code-point range.",
-                    )
-                )
-            elif not isinstance(segment_text, str) or line_text[start:end] != segment_text:
-                issues.append(
-                    Issue(
-                        "segment_text_mismatch",
-                        segment_path + ".text",
-                        "Segment text does not equal the exact source substring.",
-                    )
-                )
-            if isinstance(segment_text, str):
-                segment_texts.append(segment_text)
-
-            matching_blocks = {
-                block_id
-                for block_id in resolved_block_ids
-                if line_id in block_line_ids.get(block_id, [])
-            }
-            if not matching_blocks:
-                issues.append(
-                    Issue(
-                        "phrase_block_mismatch",
-                        segment_path,
-                        "Segment line is not part of any block referenced by the phrase.",
-                    )
-                )
-
-        surface = phrase.get("surface")
-        if isinstance(surface, str) and len(segment_texts) == len(segments):
-            if surface != "".join(segment_texts):
-                issues.append(
-                    Issue(
-                        "surface_mismatch",
-                        path + ".surface",
-                        "Phrase surface must equal the concatenated source segments.",
-                    )
-                )
-
-    for index, relation in enumerate(relations_list):
-        path = f"$.relations[{index}]"
-        _check_labels(relation.get("labels"), path + ".labels", issues)
-        from_id = relation.get("fromPhraseId")
-        to_id = relation.get("toPhraseId")
-        if isinstance(from_id, str) and from_id not in phrases:
-            issues.append(
-                Issue("unresolved_phrase", path + ".fromPhraseId", f"Unknown phrase: {from_id}")
-            )
-        if isinstance(to_id, str) and to_id not in phrases:
-            issues.append(
-                Issue("unresolved_phrase", path + ".toPhraseId", f"Unknown phrase: {to_id}")
-            )
-        if from_id == to_id and isinstance(from_id, str):
-            issues.append(
-                Issue("self_relation", path, "A relation cannot point to the same phrase.")
-            )
-
-    for index, note in enumerate(notes_list):
-        path = f"$.grammarNotes[{index}]"
-        _check_labels(note.get("labels"), path + ".labels", issues)
-        _check_scope(note.get("scope"), path + ".scope", blocks, phrases, issues)
-
-    for index, uncertainty in enumerate(uncertainties_list):
-        path = f"$.uncertainties[{index}]"
-        _check_scope(uncertainty.get("scope"), path + ".scope", blocks, phrases, issues)
-
-    return issues
-
-
-def validate_sidecar_document(
-    document: Any,
-    projection: dict[str, Any] | None = None,
-    expected_lrc_file: str | None = None,
-    schema_path: Path | None = None,
-    require_projection: bool = False,
-    learner_language: str | None = None,
-) -> list[Issue]:
-    schema = load_schema(schema_path)
-    issues = validate_schema_instance(document, schema)
-    issues.extend(validate_sidecar_semantics(document, projection, expected_lrc_file))
-    if require_projection and projection is None:
-        issues.append(
-            Issue(
-                "missing_projection",
-                "$.source.lrcProjectionHash",
-                "Offline verification requires the frozen source projection.",
-            )
-        )
-    if require_projection and isinstance(document, dict):
-        source = document.get("source")
-        if not isinstance(source, dict) or not isinstance(
-            source.get("lrcProjectionHash"), str
-        ):
-            issues.append(
-                Issue(
-                    "missing_projection_hash",
-                    "$.source.lrcProjectionHash",
-                    "The sidecar must carry a projection hash.",
-                )
-            )
-    if learner_language is not None:
-        issues.extend(validate_learner_language(document, learner_language))
-    return issues
-
-
-def learner_language_of(document: Any) -> str | None:
-    if not isinstance(document, dict):
-        return None
-    extensions = document.get("extensions")
-    if not isinstance(extensions, dict):
-        return None
-    value = extensions.get(LEARNER_LANGUAGE_EXTENSION)
-    return value.strip().lower() if isinstance(value, str) and value.strip() else None
-
-
-def _is_ascii_prose(value: str) -> bool:
-    letters = [char for char in value if char.isalpha()]
-    return bool(letters) and all(ord(char) < 128 for char in letters)
-
-
-def _has_cjk(value: str) -> bool:
-    return any(
-        "\u3400" <= char <= "\u9fff"
-        or "\u3040" <= char <= "\u30ff"
-        or "\uac00" <= char <= "\ud7af"
-        for char in value
-    )
-
-
-def _learner_text_fields(
-    document: dict[str, Any],
-) -> Iterable[tuple[str, str, str, str | None]]:
-    for collection in ("blocks", "phrases", "relations", "grammarNotes", "uncertainties"):
-        items = document.get(collection)
-        if not isinstance(items, list):
-            continue
-        for index, item in enumerate(items):
-            if not isinstance(item, dict):
-                continue
-            surface = item.get("surface")
-            surface_text = surface if isinstance(surface, str) else None
-            for key in ("meaning", "gloss", "explanation", "message", "notes"):
-                value = item.get(key)
-                if isinstance(value, str) and value.strip():
-                    yield f"$.{collection}[{index}].{key}", value, key, surface_text
-            alternatives = item.get("alternatives")
-            if isinstance(alternatives, list):
-                for alternative_index, value in enumerate(alternatives):
-                    if isinstance(value, str) and value.strip():
-                        yield (
-                            f"$.{collection}[{index}].alternatives[{alternative_index}]",
-                            value,
-                            "alternatives",
-                            surface_text,
-                        )
-
-
-def validate_learner_language(
-    document: Any, expected_language: str
-) -> list[Issue]:
-    expected = expected_language.strip().lower()
-    if not expected:
-        return [Issue("missing_learner_language", "$", "Expected a learner language.")]
-    actual = learner_language_of(document)
-    if actual is None:
-        return [
-            Issue(
-                "missing_learner_language",
-                "$.extensions.learnerLanguage",
-                "New sidecars must declare extensions.learnerLanguage.",
-            )
-        ]
-    if actual != expected:
-        return [
-            Issue(
-                "learner_language_mismatch",
-                "$.extensions.learnerLanguage",
-                f"Expected learner language {expected}, got {actual}.",
-            )
-        ]
-
-    primary = expected.split("-", 1)[0]
-    if primary not in CJK_LEARNER_LANGUAGES:
-        return []
-
-    issues: list[Issue] = []
-    for path, text, key, surface in _learner_text_fields(document):
-        if key == "gloss" and surface is not None and text.strip() == surface.strip():
-            continue
-        minimum_length = 1 if key == "gloss" else 12
-        if (
-            len(text) >= minimum_length
-            and _is_ascii_prose(text)
-            and not _has_cjk(text)
-        ):
-            issues.append(
-                Issue(
-                    "learner_text_not_in_target_language",
-                    path,
-                    f"Learner-facing prose must use {expected}, not English-only text.",
-                )
-            )
-    return issues
-
-
-def validation_report(issues: Sequence[Issue], **extra: Any) -> dict[str, Any]:
-    report: dict[str, Any] = {
-        "ok": not issues,
-        "errors": [issue.as_dict() for issue in issues],
-    }
-    report.update(extra)
-    return report
-
-
-def normalized_sidecar(
-    draft: dict[str, Any],
-    projection: dict[str, Any],
-    lrc_file: str | None = None,
-) -> dict[str, Any]:
-    """Rebuild source identity fields from the frozen projection.
-
-    Semantic content comes from the draft.  Source file, line text, timeline,
-    fingerprints, and IDs cannot be changed by the analyzer.
-    """
-
-    draft_lines = _as_object_list(draft, "lines")
-    by_id = {
-        line["lineId"]: line
-        for line in draft_lines
-        if isinstance(line.get("lineId"), str)
-    }
-    normalized_lines: list[dict[str, Any]] = []
-    for projected in projection["lines"]:
-        line = by_id[projected["lineId"]]
-        normalized: dict[str, Any] = {
-            "lineId": projected["lineId"],
-            "sourceOrder": projected["sourceOrder"],
-            "timeMs": projected["timeMs"],
-            "text": projected["text"],
-            "fingerprint": projected["fingerprint"],
-            "role": "text",
-            "language": line["language"],
-        }
-        if "endTimeMs" in line:
-            normalized["endTimeMs"] = line["endTimeMs"]
-        if "languageSpans" in line:
-            normalized["languageSpans"] = line["languageSpans"]
-        normalized_lines.append(normalized)
-
-    source = draft["source"]
-    normalized: dict[str, Any] = {
-        "schema": SIDECAR_SCHEMA_ID,
-        "schemaVersion": SCHEMA_VERSION,
-        "source": {
-            "lrcFile": lrc_file or projection.get("lrcFile") or source["lrcFile"],
-            "songId": projection["songId"],
-            "sourceLanguages": sorted(set(source["sourceLanguages"])),
-            "lineCount": projection["lineCount"],
-            "lrcProjectionHash": projection["lrcProjectionHash"],
-        },
-        "lines": normalized_lines,
-        "blocks": draft["blocks"],
-        "phrases": draft["phrases"],
-        "relations": draft["relations"],
-        "grammarNotes": draft["grammarNotes"],
-        "uncertainties": draft["uncertainties"],
-    }
-    if "extensions" in draft:
-        normalized["extensions"] = draft["extensions"]
-    return normalized
-
-
-def sidecar_output_path(lrc_path: Path) -> Path:
-    resolved = ensure_local_lrc(lrc_path)
-    return resolved.with_suffix(".json")
-
-
 def _write_bytes_atomic(path: Path, data: bytes) -> None:
+    if path.is_symlink():
+        raise SidecarError(
+            "artifact_symlink",
+            "$",
+            f"Refusing to write through a symlink: {path}",
+        )
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temp_name = tempfile.mkstemp(
         prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent)
@@ -2216,6 +1342,12 @@ def _write_bytes_atomic(path: Path, data: bytes) -> None:
 
 
 def write_json_atomic(path: Path, value: Any, replace: bool = False) -> bool:
+    if path.is_symlink():
+        raise SidecarError(
+            "artifact_symlink",
+            "$",
+            f"Refusing to write through a symlink: {path}",
+        )
     data = pretty_json(value).encode("utf-8")
     if path.exists():
         existing = path.read_bytes()
@@ -2228,168 +1360,3 @@ def write_json_atomic(path: Path, value: Any, replace: bool = False) -> bool:
             )
     _write_bytes_atomic(path, data)
     return True
-
-
-def build_validation_report(
-    issues: Sequence[Issue],
-    projection: dict[str, Any] | None = None,
-    draft_path: Path | None = None,
-) -> dict[str, Any]:
-    report = validation_report(
-        issues,
-        schemaVersion=SCHEMA_VERSION,
-        projectionHash=(
-            projection.get("lrcProjectionHash") if projection is not None else None
-        ),
-        draft=str(draft_path.name) if draft_path is not None else None,
-    )
-    return report
-
-
-def write_validation_report(
-    path: Path,
-    issues: Sequence[Issue],
-    projection: dict[str, Any] | None = None,
-    draft_path: Path | None = None,
-) -> None:
-    write_json_atomic(
-        path,
-        build_validation_report(issues, projection=projection, draft_path=draft_path),
-        replace=True,
-    )
-
-
-def finalize_sidecar(
-    lrc_path: Path,
-    projection_path: Path,
-    translated_lrc_path: Path,
-    manifest_path: Path,
-    draft_path: Path,
-    isolation_path: Path | None = None,
-    workdir: Path | None = None,
-    report_path: Path | None = None,
-    replace: bool = False,
-    learner_language: str | None = None,
-) -> tuple[Path, bool]:
-    projection = load_projection(projection_path)
-    translated_lrc = ensure_local_lrc(translated_lrc_path)
-    try:
-        manifest = read_json(manifest_path)
-    except SidecarError as exc:
-        if report_path is not None:
-            write_validation_report(
-                report_path,
-                [Issue(exc.code, exc.path, exc.message)],
-                projection,
-                draft_path,
-            )
-        raise
-    if workdir is not None:
-        workdir_issues = verify_frozen_translation_files(
-            projection, translated_lrc, manifest, workdir
-        )
-        if workdir_issues:
-            raise SidecarError(
-                workdir_issues[0].code,
-                workdir_issues[0].message,
-                workdir_issues[0].path,
-            )
-    _, freeze_issues = verify_frozen_translation(projection, translated_lrc, manifest)
-    if freeze_issues:
-        if report_path is not None:
-            write_validation_report(report_path, freeze_issues, projection, draft_path)
-        raise SidecarError(
-            freeze_issues[0].code, freeze_issues[0].message, freeze_issues[0].path
-        )
-    source_report, source_issues = verify_source_matches_projection(
-        projection, lrc_path
-    )
-    if source_issues:
-        if report_path is not None:
-            write_validation_report(report_path, source_issues, projection, draft_path)
-        raise SidecarError(
-            source_issues[0].code, source_issues[0].message, source_issues[0].path
-        )
-
-    try:
-        draft = read_json(draft_path)
-    except SidecarError as exc:
-        if report_path is not None:
-            write_validation_report(
-                report_path,
-                [Issue(exc.code, exc.path, exc.message)],
-                projection,
-                draft_path,
-            )
-        raise
-    if isolation_path is None:
-        raise SidecarError(
-            "missing_isolation_proof",
-            "Formal finalization requires an --isolation proof file.",
-        )
-    try:
-        isolation = read_json(isolation_path)
-    except SidecarError as exc:
-        if report_path is not None:
-            write_validation_report(
-                report_path,
-                [Issue(exc.code, exc.path, exc.message)],
-                projection,
-                draft_path,
-            )
-        raise
-    isolation_issues = validate_isolation_proof(isolation, projection)
-    if isolation_issues:
-        if report_path is not None:
-            write_validation_report(
-                report_path, isolation_issues, projection, draft_path
-            )
-        raise SidecarError(
-            isolation_issues[0].code,
-            isolation_issues[0].message,
-            isolation_issues[0].path,
-        )
-    issues = validate_sidecar_document(
-        draft,
-        projection=projection,
-        expected_lrc_file=projection.get("lrcFile"),
-        learner_language=learner_language,
-    )
-    if issues:
-        if report_path is not None:
-            write_validation_report(report_path, issues, projection, draft_path)
-        raise SidecarError(issues[0].code, issues[0].message, issues[0].path)
-
-    try:
-        normalized = normalized_sidecar(
-            draft,
-            projection,
-            lrc_file=projection.get("lrcFile", lrc_path.name),
-        )
-    except (KeyError, TypeError) as exc:
-        raise SidecarError(
-            "normalization_failed",
-            f"The semantic draft is missing canonical source line data: {exc}",
-        ) from exc
-    normalized_issues = validate_sidecar_document(
-        normalized,
-        projection=projection,
-        expected_lrc_file=projection.get("lrcFile"),
-        learner_language=learner_language,
-    )
-    if normalized_issues:
-        if report_path is not None:
-            write_validation_report(
-                report_path, normalized_issues, projection, draft_path
-            )
-        raise SidecarError(
-            normalized_issues[0].code,
-            normalized_issues[0].message,
-            normalized_issues[0].path,
-        )
-
-    output = sidecar_output_path(lrc_path)
-    changed = write_json_atomic(output, normalized, replace=replace)
-    if report_path is not None:
-        write_validation_report(report_path, [], projection, draft_path)
-    return output, changed

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate a sidecar against a fresh projection and frozen translation."""
+"""Validate a finalized Schema v2 sidecar and its complete audit chain."""
 
 from __future__ import annotations
 
@@ -10,76 +10,76 @@ from pathlib import Path
 
 from sidecarlib import (
     SidecarError,
+    assert_distinct_paths,
     configure_utf8_stdio,
     load_projection,
-    validation_report,
-    verify_frozen_translation,
-    verify_source_matches_projection,
-    validate_sidecar_document,
     write_json_atomic,
 )
+from v2lib import validate_finalized_sidecar_v2
 
 
 def main() -> int:
     configure_utf8_stdio()
     parser = argparse.ArgumentParser(
-        description="Run the full offline sidecar integrity check."
+        description="Run the full v2 source, translation, audit, proof, and sidecar check."
     )
     parser.add_argument("lrc", type=Path, help="Original local .lrc file")
-    parser.add_argument("sidecar", type=Path, help="Sidecar JSON to validate")
+    parser.add_argument("sidecar", type=Path, help="Production sidecar JSON")
     parser.add_argument(
         "--projection", type=Path, required=True, help="Frozen source-projection.json"
     )
     parser.add_argument(
         "--workdir", type=Path, required=True, help="<song>.grammar-work directory"
     )
-    parser.add_argument(
-        "--report", type=Path, help="Optional validation-report.json destination"
-    )
-    parser.add_argument(
-        "--learner-language",
-        required=True,
-        help="Language for learner-facing prose, e.g. zh-CN, ja, en.",
-    )
+    parser.add_argument("--report", type=Path, help="Optional validation report")
+    parser.add_argument("--learner-language", required=True)
     args = parser.parse_args()
 
+    workdir = args.workdir.expanduser().resolve()
     try:
-        projection = load_projection(args.projection)
-        translated = args.workdir / "translated.lrc"
-        manifest_path = args.workdir / "translation-manifest.json"
-        source_report, source_issues = verify_source_matches_projection(
-            projection, args.lrc
+        raw_sidecar_path = args.sidecar.expanduser()
+        if raw_sidecar_path.is_symlink():
+            raise SidecarError(
+                "unsupported_source",
+                "Symlinked sidecars are not supported.",
+            )
+        source_path = args.lrc.expanduser()
+        sidecar_path = raw_sidecar_path.resolve()
+        projection_path = args.projection.expanduser()
+        report_path = args.report.expanduser() if args.report is not None else None
+        assert_distinct_paths(
+            ("source LRC", source_path),
+            ("production sidecar", sidecar_path),
+            ("source projection", projection_path),
+            ("frozen translation", workdir / "translated.lrc"),
+            ("translation manifest", workdir / "translation-manifest.json"),
+            ("semantic draft", workdir / "semantic-draft.json"),
+            ("analysis candidate", workdir / "analysis-candidate.json"),
+            ("candidate hash", workdir / "analysis-candidate.sha256"),
+            ("semantic audit", workdir / "semantic-audit.json"),
+            ("grammar isolation proof", workdir / "isolation-grammar-analysis.json"),
+            ("audit isolation proof", workdir / "isolation-semantic-audit.json"),
+            ("validation report", report_path),
         )
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        freeze_report, freeze_issues = verify_frozen_translation(
-            projection, translated, manifest
+        projection = load_projection(projection_path)
+        issues = validate_finalized_sidecar_v2(
+            source_path,
+            sidecar_path,
+            projection_path,
+            workdir,
+            args.learner_language,
         )
-        document = json.loads(args.sidecar.read_text(encoding="utf-8"))
-        sidecar_issues = validate_sidecar_document(
-            document,
-            projection=projection,
-            expected_lrc_file=projection.get("lrcFile", args.lrc.name),
-            require_projection=True,
-            learner_language=args.learner_language,
-        )
-        issues = [*source_issues, *freeze_issues, *sidecar_issues]
-        report = validation_report(
-            issues,
-            source=source_report,
-            translation=freeze_report,
-            sidecar=str(args.sidecar.name),
-            projectionHash=projection["lrcProjectionHash"],
-        )
-        if args.report is not None:
-            write_json_atomic(args.report, report, replace=True)
-    except FileNotFoundError as exc:
-        print(f"ERROR [file_not_found] $: {exc}", file=sys.stderr)
-        return 2
-    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-        print(f"ERROR [invalid_json] $: {exc}", file=sys.stderr)
-        return 2
-    except SidecarError as exc:
-        print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
+        report = {
+            "ok": not issues,
+            "schemaVersion": 2,
+            "errors": [issue.as_dict() for issue in issues],
+            "projectionHash": projection["lrcProjectionHash"],
+            "sidecar": sidecar_path.name,
+        }
+        if report_path is not None:
+            write_json_atomic(report_path, report, replace=True)
+    except (SidecarError, FileNotFoundError, json.JSONDecodeError) as exc:
+        print(f"ERROR [invalid_sidecar] $: {exc}", file=sys.stderr)
         return 2
 
     print(json.dumps(report, ensure_ascii=False, indent=2))

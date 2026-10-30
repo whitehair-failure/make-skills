@@ -1,0 +1,12 @@
+{
+  "artifactSha256": "sha256:7337c26945b0a3bdd5b1dc78f5bcdf6294fcd79161a73c7993ac3697ce216a40",
+  "childTranscriptId": "fixture-grammar-child",
+  "context": "non-forked-transcript",
+  "isolationVersion": 2,
+  "method": "documented-harness",
+  "parentTranscriptId": "fixture-parent",
+  "schema": "sakurauta.lyrics-grammar-isolation-proof",
+  "sourceProjectionHash": "sha256:cbe5e625a7b4c0aebe2a6afac1663e240f3ba75b1f631967e2189c22ac667e79",
+  "stage": "grammar-analysis",
+  "transcriptIsolated": true
+}

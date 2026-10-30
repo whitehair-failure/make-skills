@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record explicit, verifiable isolation evidence before semantic analysis."""
+"""Record a stage-bound v2 child transcript isolation proof."""
 
 from __future__ import annotations
 
@@ -9,21 +9,35 @@ from pathlib import Path
 
 from sidecarlib import (
     ISOLATION_METHODS,
+    ISOLATION_STAGES,
     SidecarError,
-    build_isolation_proof,
+    assert_distinct_paths,
     configure_utf8_stdio,
     load_projection,
     pretty_json,
     write_json_atomic,
 )
+from v2lib import build_isolation_proof_v2
 
 
 def main() -> int:
     configure_utf8_stdio()
     parser = argparse.ArgumentParser(
-        description="Record the separate-transcript proof required for formal generation."
+        description="Record the separate-transcript proof required for a v2 stage."
     )
     parser.add_argument("projection", type=Path, help="source-projection.json")
+    parser.add_argument(
+        "--stage",
+        required=True,
+        choices=sorted(ISOLATION_STAGES),
+        help="Grammar-analysis or semantic-audit stage",
+    )
+    parser.add_argument(
+        "--artifact",
+        type=Path,
+        required=True,
+        help="Artifact produced by the child (draft for grammar, audit report for audit)",
+    )
     parser.add_argument(
         "--method",
         required=True,
@@ -33,7 +47,7 @@ def main() -> int:
     parser.add_argument(
         "--child-transcript-id",
         required=True,
-        help="ID of the fresh grammar-analysis transcript",
+        help="ID of the fresh child transcript",
     )
     parser.add_argument(
         "--parent-transcript-id",
@@ -43,20 +57,30 @@ def main() -> int:
         "--output",
         type=Path,
         required=True,
-        help="Destination isolation-proof.json",
+        help="Destination isolation proof JSON",
     )
     parser.add_argument("--replace", action="store_true")
     args = parser.parse_args()
 
     try:
-        projection = load_projection(args.projection)
-        proof = build_isolation_proof(
+        projection_path = args.projection.expanduser()
+        artifact_path = args.artifact.expanduser()
+        output_path = args.output.expanduser()
+        assert_distinct_paths(
+            ("source projection", projection_path),
+            ("child artifact", artifact_path),
+            ("isolation proof", output_path),
+        )
+        projection = load_projection(projection_path)
+        proof = build_isolation_proof_v2(
             projection,
+            args.stage,
+            artifact_path,
             args.method,
             child_transcript_id=args.child_transcript_id,
             parent_transcript_id=args.parent_transcript_id,
         )
-        write_json_atomic(args.output, proof, replace=args.replace)
+        write_json_atomic(output_path, proof, replace=args.replace)
     except SidecarError as exc:
         print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
         return 2

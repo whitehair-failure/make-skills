@@ -1,37 +1,43 @@
 {
   "blocks": [
     {
-      "blockId": "b_main",
-      "confidence": 0.9,
+      "blockId": "b_fixture",
+      "confidence": 0.92,
       "endTimeMs": 4000,
-      "labels": [
-        {
-          "key": "minimal",
-          "namespace": "discourse"
-        }
-      ],
+      "labels": [],
       "lineIds": [
         "l_339b430c43f26ea9",
         "l_0b56b8a7c57ca70e"
       ],
-      "meaning": "한 통의 짧은 편지입니다.",
+      "meaning": {
+        "parts": [
+          {
+            "meaningUnitOccurrenceId": "muo_fixture"
+          }
+        ]
+      },
       "startTimeMs": 2000
     }
   ],
+  "extensions": {
+    "learnerLanguage": "zh-CN"
+  },
   "grammarNotes": [
     {
-      "confidence": 0.82,
-      "explanation": "문장 성분이 줄을 걸쳐 이어집니다.",
+      "confidence": 0.8,
+      "explanation": "两行共同组成完整的信件表达。",
       "labels": [
         {
-          "key": "cross_line",
+          "key": "fixture",
           "namespace": "syntax"
         }
       ],
-      "noteId": "g_main",
+      "noteId": "g_fixture",
       "scope": {
-        "blockId": "b_main",
-        "phraseId": "p_main"
+        "blockIds": [
+          "b_fixture"
+        ],
+        "phraseId": "p_fixture"
       }
     }
   ],
@@ -55,46 +61,75 @@
       "timeMs": 4000
     }
   ],
+  "meaningUnits": [
+    {
+      "confidence": 0.9,
+      "labels": [],
+      "meaningUnitId": "mu_fixture",
+      "occurrences": [
+        {
+          "blockId": "b_fixture",
+          "occurrenceId": "muo_fixture",
+          "sourceSegments": [
+            {
+              "end": 7,
+              "lineId": "l_339b430c43f26ea9",
+              "start": 0,
+              "text": "너에게 보내는"
+            },
+            {
+              "end": 6,
+              "lineId": "l_0b56b8a7c57ca70e",
+              "start": 0,
+              "text": "짧은 편지야"
+            }
+          ]
+        }
+      ],
+      "text": "这是寄给你的一封短信。"
+    }
+  ],
   "phrases": [
     {
-      "blockIds": [
-        "b_main"
-      ],
-      "confidence": 0.84,
-      "explanation": "두 줄이 하나의 문장을 이룹니다.",
-      "gloss": "一封短短的信",
+      "confidence": 0.9,
+      "explanation": "两行共同组成完整的信件表达。",
+      "gloss": "寄给你的短信",
       "kind": "phrase",
       "labels": [
         {
-          "key": "minimal",
-          "namespace": "lang:ko"
+          "key": "shared_occurrence",
+          "namespace": "syntax"
         }
       ],
-      "phraseId": "p_main",
-      "role": "minimal_phrase",
-      "sourceSegments": [
+      "occurrences": [
         {
-          "end": 7,
-          "lineId": "l_339b430c43f26ea9",
-          "start": 0,
-          "text": "너에게 보내는"
-        },
-        {
-          "end": 6,
-          "lineId": "l_0b56b8a7c57ca70e",
-          "start": 0,
-          "text": "짧은 편지야"
+          "blockId": "b_fixture",
+          "occurrenceId": "po_fixture",
+          "sourceSegments": [
+            {
+              "end": 7,
+              "lineId": "l_339b430c43f26ea9",
+              "start": 0,
+              "text": "너에게 보내는"
+            },
+            {
+              "end": 6,
+              "lineId": "l_0b56b8a7c57ca70e",
+              "start": 0,
+              "text": "짧은 편지야"
+            }
+          ]
         }
       ],
+      "phraseId": "p_fixture",
+      "role": "shared_phrase",
       "surface": "너에게 보내는짧은 편지야"
     }
   ],
   "relations": [],
-  "extensions": {
-    "learnerLanguage": "zh-CN"
-  },
+  "repetitionGroups": [],
   "schema": "sakurauta.lyrics-grammar-analysis",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "lineCount": 2,
     "lrcFile": "source.lrc",

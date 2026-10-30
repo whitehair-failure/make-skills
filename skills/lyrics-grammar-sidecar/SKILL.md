@@ -1,32 +1,85 @@
 ---
 name: lyrics-grammar-sidecar
-description: Generate, validate, and finalize a SakuraUta lyrics grammar analysis JSON sidecar for a local LRC file. Use as the grammar-analysis child of sakurauta-lyrics-workflow, or standalone when a frozen bilingual LRC and a semantic draft must be validated. Contains its own schema, deterministic scripts, contracts, and fixtures.
-version: 1.1.0
+description: Generate, validate, audit, and finalize a SakuraUta Schema v2 lyrics grammar sidecar from a local LRC, frozen bilingual LRC, deterministic repetition candidates, and an independent semantic-audit child.
+version: 2.0.0
 ---
 
-# Lyrics Grammar Sidecar
+# Lyrics Grammar Sidecar v2
 
-This Skill is self-contained: its schema is
-`schema/v1/lyrics-grammar-analysis.schema.json` and its scripts live under
-`scripts/`. Do not depend on the repository root or absolute developer paths.
+This Skill is self-contained. Its schemas live under `schema/v2/`, scripts
+under `scripts/`, and authoring/audit contracts under `references/`. Do not
+depend on a repository root or developer machine path.
 
-## Grammar Child Workflow
+Schema v1 is unsupported. Do not dual-read, migrate, adapt, or fall back.
 
-The parent or user must provide:
+## Roles and Boundary
 
-- the original local `.lrc`;
+The overall workflow uses three fresh child roles:
+
+1. translate with the unchanged `lyrics-translator` Skill;
+2. analyze grammar in a fresh grammar child;
+3. audit semantics in a different fresh audit child.
+
+The grammar child writes only `semantic-draft.json`. The deterministic
+candidate tool may write `repetition-candidates.json`; `prepare.py` writes the
+candidate and its hash.
+
+The audit child writes only `semantic-audit.json`. It cannot edit the
+candidate or draft.
+
+Only `finalize.py` writes the production sibling `<song>.json`.
+
+## Required Inputs
+
+- original local `.lrc`;
 - `<song>.grammar-work/source-projection.json`;
-- the frozen `<song>.grammar-work/translated.lrc`;
-- a real separate-transcript identity.
+- accepted and frozen `<song>.grammar-work/translated.lrc` plus
+  `translation-manifest.json`;
+- target learner language, for example `zh-CN`;
+- real non-forked transcript IDs for grammar analysis and semantic audit.
 
-Read [references/draft-contract.md](references/draft-contract.md) and write
-only `<workdir>/semantic-draft.json`. Do not copy per-line translations into
-the draft. Do not write the sibling `<song>.json`.
+Reject video, subtitle, remote, network-share, non-LRC, and symlinked source
+inputs.
 
-All learner-facing free text must use the requested learner language:
-`meaning`, `gloss`, `explanation`, `message`, `notes`, and `alternatives`.
-Stable identifiers (`role`, `register`, `relation.type`, label namespace/key)
-may remain English. Record the language in:
+## 1. Project the Source
+
+```powershell
+python scripts\project_source.py "<song.lrc>" `
+  --song-id "<SakuraUta songId>"
+```
+
+Default output:
+`<song-dir>/<song>.grammar-work/source-projection.json`.
+
+The projection owns line IDs, source order, timestamps, fingerprints,
+source text, and the projection hash. Later stages may not rewrite them.
+
+## 2. Freeze the Accepted Translation
+
+The translation is produced by the unchanged `lyrics-translator` Skill. After
+the user accepts it:
+
+```powershell
+python scripts\verify_translation.py `
+  "<workdir>\source-projection.json" `
+  "<accepted-translated.lrc>" `
+  --workdir "<workdir>"
+```
+
+This writes `translated.lrc` and `translation-manifest.json`. A later edit
+fails closed.
+
+## 3. Fresh Grammar Child
+
+Give the grammar child:
+
+- the original LRC;
+- source projection;
+- frozen `translated.lrc`;
+- requested learner language;
+- [references/draft-contract.md](references/draft-contract.md).
+
+The child records the target language:
 
 ```json
 {
@@ -36,54 +89,113 @@ may remain English. Record the language in:
 }
 ```
 
-Do not leave `gloss` in English merely because earlier examples did.
+It writes only `semantic-draft.json`. All learner-facing prose uses that
+language. Stable identifiers may remain English.
 
-Record the proof:
+After lines and blocks exist, discover exact repetitions:
+
+```powershell
+python scripts\discover_repetitions.py `
+  "<workdir>\semantic-draft.json" `
+  --projection "<workdir>\source-projection.json" `
+  --workdir "<workdir>" `
+  --learner-language "<learner language>" `
+  --replace
+```
+
+Copy every candidate's `repetitionId` and `occurrences` verbatim into the
+draft's `repetitionGroups`. The grammar child may not invent or alter groups.
+
+After the child returns and the draft is final, the parent records the actual
+grammar-child identity:
 
 ```powershell
 python scripts\record_isolation.py `
   "<workdir>\source-projection.json" `
+  --stage grammar-analysis `
+  --artifact "<workdir>\semantic-draft.json" `
   --method native-subagent `
-  --child-transcript-id "<actual-child-id>" `
+  --child-transcript-id "<actual-grammar-child-id>" `
   --parent-transcript-id "<actual-parent-id>" `
-  --output "<workdir>\isolation-proof.json"
+  --output "<workdir>\isolation-grammar-analysis.json" `
+  --replace
 ```
 
-The method and IDs must reflect the real Harness. Inline or forked analysis is
-rejected.
+Never invent transcript IDs. Inline or forked execution is rejected.
 
-## Projection
+## 4. Freeze the Analysis Candidate
 
-For a new song, create the canonical source projection:
+The parent runs the deterministic freeze after recording the grammar proof:
 
 ```powershell
-python scripts\project_source.py "<song.lrc>" `
-  --song-id "<songId>"
+python scripts\prepare.py "<song.lrc>" `
+  --projection "<workdir>\source-projection.json" `
+  --workdir "<workdir>" `
+  --learner-language "<learner language>"
 ```
 
-The default output is `<song>.grammar-work/source-projection.json`. The
-projection preserves physical source order, rounded milliseconds, the first
-source row at each timestamp, NFC text, and content-derived line IDs.
+Preparation verifies:
 
-## Translation Handoff
+- source projection still matches the original LRC;
+- translation freeze is intact;
+- Schema v2 and learner language are valid;
+- source fields normalize exactly from the projection;
+- every discovered repetition candidate is present and exact;
+- meaning parts cover every block line;
+- shared phrase/meaning occurrences map at identical canonical offsets.
 
-The translation is completed by the unchanged `lyrics-translator` Skill. After
-the user accepts it, freeze it:
+Outputs:
+
+- `analysis-candidate.json`;
+- `analysis-candidate.sha256`;
+- `repetition-candidates.json`;
+- `validation-report.json`.
+
+If preparation fails, revise the semantic draft in a fresh grammar child.
+Do not edit the frozen translation or hand-edit the candidate.
+
+## 5. Different Fresh Semantic-Audit Child
+
+Dispatch a fresh child whose transcript differs from the grammar child and
+parent. Give it the original LRC, frozen translation, candidate, candidate
+hash, read-only semantic draft for supporting context, and
+[references/semantic-audit-contract.md](references/semantic-audit-contract.md).
+
+The parent dispatches the child. The audit child writes only
+`semantic-audit.json`. It must review every
+candidate block and meaning unit and explicitly report unsupported additions,
+translation mismatches, shared drift, coverage gaps, and missing evidence.
+
+Validate the report:
 
 ```powershell
-python scripts\verify_translation.py `
+python scripts\validate_audit.py `
+  "<workdir>\analysis-candidate.json" `
+  --candidate-hash "<workdir>\analysis-candidate.sha256" `
+  --learner-language "<learner language>" `
+  "<workdir>\semantic-audit.json"
+```
+
+After validation, the parent records the audit-child proof:
+
+```powershell
+python scripts\record_isolation.py `
   "<workdir>\source-projection.json" `
-  "<accepted-translated.lrc>" `
-  --workdir "<workdir>"
+  --stage semantic-audit `
+  --artifact "<workdir>\semantic-audit.json" `
+  --method native-subagent `
+  --child-transcript-id "<actual-audit-child-id>" `
+  --parent-transcript-id "<actual-parent-id>" `
+  --output "<workdir>\isolation-semantic-audit.json" `
+  --replace
 ```
 
-The freeze writes `translated.lrc` and `translation-manifest.json`. The
-manifest hash is checked before analysis and finalization, so a later edit
-cannot silently change accepted translation.
+An audit `fail`, error finding, missing reviewed ID, candidate-hash mismatch,
+same-child self-audit, or v1 proof blocks finalization.
 
-## Finalize and Validate
+## 6. Finalize
 
-Only the deterministic finalizer writes the production sidecar:
+The parent runs the deterministic finalizer:
 
 ```powershell
 python scripts\finalize.py "<song.lrc>" `
@@ -92,7 +204,29 @@ python scripts\finalize.py "<song.lrc>" `
   --learner-language "<learner language>"
 ```
 
-Then run the full integrity check:
+The finalizer rechecks the full chain:
+
+```text
+source projection
+  -> semantic-draft.json
+  -> analysis-candidate.json
+  -> semantic-audit.json
+  -> isolation proofs(stage, artifactSha256)
+  -> final <song>.json
+```
+
+It atomically writes:
+
+```text
+dirname(lrc) / basename(lrc, ".lrc") + ".json"
+```
+
+Existing differing output is preserved unless the user explicitly passes
+`--replace`.
+An existing Schema v1 production file must be regenerated with `--replace`;
+there is no v1 read or migration path.
+
+Then validate the production result and chain:
 
 ```powershell
 python scripts\validate_all.py `
@@ -102,19 +236,24 @@ python scripts\validate_all.py `
   --learner-language "<learner language>"
 ```
 
-The output is always `dirname(lrc) / basename(lrc, ".lrc") + ".json"`.
-Existing different output is preserved unless the user explicitly asks for
-`--replace`.
-
 ## Validation Boundary
 
-The Skill validates deterministic structure: schema, source identity,
-timestamps, fingerprints, coverage, cross-references, Unicode code-point
-spans, labels, HTML-like text, frozen hashes, isolation evidence, and atomic
-writes. It never attempts to decide whether a semantic explanation is good.
+Deterministic validation owns:
 
-Language-specific grammar remains in namespaced labels and prose; the schema
-does not require a Japanese-specific field set.
+- Schema v2 and v1 rejection;
+- strict UTF-8 JSON with duplicate-key, non-finite-number, and surrogate
+  rejection;
+- source identity and projection hashes;
+- Unicode code-point spans and contiguous occurrence mapping;
+- exact NFC repetition discovery and candidate completion;
+- canonical occurrence inheritance and explicit override structure;
+- composed meaning coverage;
+- references, multi-block scopes, learner language, HTML/path guards;
+- candidate/audit/proof hash chain and atomic writes.
+
+It does not decide whether prose is faithful. That is the independent audit
+child's responsibility. The generation child must never self-approve its own
+semantic audit.
 
 ## Self-Test
 
@@ -124,12 +263,10 @@ Run from any current directory:
 python scripts\selftest.py
 ```
 
-The test resolves the schema relative to this Skill and uses only temporary
-fixtures. It must pass when the three related Skill directories are copied to
-a different location:
-
-```text
-sakurauta-lyrics-workflow/
-lyrics-translator/
-lyrics-grammar-sidecar/
-```
+The standard-library-only suite uses temporary fixtures and committed v2
+golden fixtures. It covers exact maximal and changed-tail repetition, three
+occurrences, overlap, line-break variation, cross-line NFC composition,
+internal whitespace, fuzzy non-matches, metadata exclusion, missing/wrong
+shared occurrences, blank overrides, meaning coverage, strict JSON, path and
+HTML guards, audit pass/fail, proof/hash/canonical-byte tamper, v1 rejection,
+and atomic finalization.

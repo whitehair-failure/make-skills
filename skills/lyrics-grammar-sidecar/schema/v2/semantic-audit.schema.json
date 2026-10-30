@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sakurauta.app/schemas/lyrics-grammar-semantic-audit/v1.json",
+  "title": "SakuraUta Lyrics Grammar Semantic Audit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "auditVersion",
+    "candidateSha256",
+    "learnerLanguage",
+    "status",
+    "reviewedBlockIds",
+    "reviewedMeaningUnitIds",
+    "findings"
+  ],
+  "properties": {
+    "schema": {"const": "sakurauta.lyrics-grammar-semantic-audit"},
+    "auditVersion": {"const": 1},
+    "candidateSha256": {"$ref": "#/$defs/hash"},
+    "learnerLanguage": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(?:-[A-Za-z0-9]+)*$"
+    },
+    "status": {"enum": ["pass", "fail"]},
+    "reviewedBlockIds": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/id"}
+    },
+    "reviewedMeaningUnitIds": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/id"}
+    },
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    }
+  },
+  "$defs": {
+    "hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$"},
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message"],
+      "properties": {
+        "code": {
+          "enum": [
+            "unsupported-addition",
+            "translation-mismatch",
+            "shared-drift",
+            "coverage-gap",
+            "missing-source-evidence",
+            "other"
+          ]
+        },
+        "severity": {"enum": ["error", "warning"]},
+        "path": {"type": "string", "minLength": 1, "maxLength": 240},
+        "message": {"type": "string", "minLength": 1, "maxLength": 1000}
+      }
+    }
+  }
+}

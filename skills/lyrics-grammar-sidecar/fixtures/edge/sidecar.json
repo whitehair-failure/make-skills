@@ -1,37 +1,22 @@
 {
   "blocks": [
     {
-      "blockId": "b_all_edge",
-      "confidence": 1.0,
+      "blockId": "b_fixture",
+      "confidence": 0.92,
       "endTimeMs": 30000,
-      "labels": [
-        {
-          "key": "edge",
-          "namespace": "test"
-        }
-      ],
+      "labels": [],
       "lineIds": [
         "l_f6960855204db522",
         "l_e42cab7a3a0a1d06",
         "l_382e4bdca7aa352e"
       ],
-      "meaning": "Unicode 与重复行边界夹具。",
-      "startTimeMs": 10000
-    },
-    {
-      "blockId": "b_unicode",
-      "confidence": 1.0,
-      "endTimeMs": 10000,
-      "labels": [
-        {
-          "key": "codepoint",
-          "namespace": "unicode"
-        }
-      ],
-      "lineIds": [
-        "l_f6960855204db522"
-      ],
-      "meaning": "表情与组合字符按码点计数。",
+      "meaning": {
+        "parts": [
+          {
+            "meaningUnitOccurrenceId": "muo_fixture"
+          }
+        ]
+      },
       "startTimeMs": 10000
     }
   ],
@@ -40,18 +25,20 @@
   },
   "grammarNotes": [
     {
-      "confidence": 1.0,
-      "explanation": "该区间使用 Unicode 码点索引，而不是 UTF-16 单元。",
+      "confidence": 0.8,
+      "explanation": "表情与组合字符按 Unicode 码点计数。",
       "labels": [
         {
-          "key": "codepoint_span",
-          "namespace": "unicode"
+          "key": "fixture",
+          "namespace": "syntax"
         }
       ],
-      "noteId": "g_unicode",
+      "noteId": "g_fixture",
       "scope": {
-        "blockId": "b_unicode",
-        "phraseId": "p_unicode"
+        "blockIds": [
+          "b_fixture"
+        ],
+        "phraseId": "p_fixture"
       }
     }
   ],
@@ -101,68 +88,87 @@
       "timeMs": 30000
     }
   ],
+  "meaningUnits": [
+    {
+      "confidence": 0.9,
+      "labels": [],
+      "meaningUnitId": "mu_fixture",
+      "occurrences": [
+        {
+          "blockId": "b_fixture",
+          "occurrenceId": "muo_fixture",
+          "sourceSegments": [
+            {
+              "end": 3,
+              "lineId": "l_f6960855204db522",
+              "start": 0,
+              "text": "😀é"
+            },
+            {
+              "end": 4,
+              "lineId": "l_e42cab7a3a0a1d06",
+              "start": 0,
+              "text": "same"
+            },
+            {
+              "end": 4,
+              "lineId": "l_382e4bdca7aa352e",
+              "start": 0,
+              "text": "same"
+            }
+          ]
+        }
+      ],
+      "text": "Unicode 与重复行边界夹具。"
+    }
+  ],
   "phrases": [
     {
-      "blockIds": [
-        "b_all_edge",
-        "b_unicode"
-      ],
-      "confidence": 1.0,
-      "explanation": "emoji 只占一个码点；组合字符同样按码点计。",
-      "kind": "token",
-      "labels": [
-        {
-          "key": "emoji",
-          "namespace": "unicode"
-        }
-      ],
-      "phraseId": "p_unicode",
-      "role": "emoji_token",
-      "sourceSegments": [
-        {
-          "end": 1,
-          "lineId": "l_f6960855204db522",
-          "start": 0,
-          "text": "😀"
-        }
-      ],
-      "surface": "😀"
-    },
-    {
-      "blockIds": [
-        "b_all_edge"
-      ],
-      "confidence": 1.0,
-      "explanation": "相同文本位于不同时间戳，因此引用可区分。",
+      "confidence": 0.9,
+      "explanation": "表情与组合字符按 Unicode 码点计数。",
+      "gloss": "笑脸与相同文本",
       "kind": "phrase",
       "labels": [
         {
-          "key": "duplicate",
-          "namespace": "test"
+          "key": "shared_occurrence",
+          "namespace": "syntax"
         }
       ],
-      "phraseId": "p_same",
-      "role": "duplicate_sequence",
-      "sourceSegments": [
+      "occurrences": [
         {
-          "end": 4,
-          "lineId": "l_e42cab7a3a0a1d06",
-          "start": 0,
-          "text": "same"
-        },
-        {
-          "end": 4,
-          "lineId": "l_382e4bdca7aa352e",
-          "start": 0,
-          "text": "same"
+          "blockId": "b_fixture",
+          "occurrenceId": "po_fixture",
+          "sourceSegments": [
+            {
+              "end": 3,
+              "lineId": "l_f6960855204db522",
+              "start": 0,
+              "text": "😀é"
+            },
+            {
+              "end": 4,
+              "lineId": "l_e42cab7a3a0a1d06",
+              "start": 0,
+              "text": "same"
+            },
+            {
+              "end": 4,
+              "lineId": "l_382e4bdca7aa352e",
+              "start": 0,
+              "text": "same"
+            }
+          ]
         }
       ],
-      "surface": "samesame"
+      "phraseId": "p_fixture",
+      "role": "shared_phrase",
+      "surface": "😀ésamesame"
     }
   ],
   "relations": [],
+  "repetitionGroups": [],
   "schema": "sakurauta.lyrics-grammar-analysis",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "lineCount": 3,
     "lrcFile": "source.lrc",
