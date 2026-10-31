@@ -79,8 +79,10 @@ Read only the original LRC, source projection, and frozen translated.lrc.
 Write only <workdir>\semantic-draft.json.
 Use learner language <target>.
 You can run scripts\validate.py at any time during drafting to check your draft.
-Run discover_repetitions.py after blocks are complete and copy every candidate
-verbatim into repetitionGroups.
+Run discover_repetitions.py with --in-place after blocks are complete:
+  python scripts\discover_repetitions.py "<workdir>\semantic-draft.json" --projection "<workdir>\source-projection.json" --workdir "<workdir>" --learner-language "<target>" --replace --in-place
+You can also run scripts\resolve_spans.py to automatically verify or fix Unicode code-point spans:
+  python scripts\resolve_spans.py "<workdir>\semantic-draft.json" --projection "<workdir>\source-projection.json" --in-place
 Do not write <song>.json and do not alter the frozen translation.
 ```
 
@@ -130,6 +132,7 @@ supporting context; the candidate is the reviewed artifact.
 Write only <workdir>\semantic-audit.json.
 Self-verify with scripts\validate_audit.py before returning.
 Do not edit the draft, candidate, hash, translation, or <song>.json.
+Do not inspect Python internals or search for schema files outside schema/v2/.
 Use learner language <target>.
 ```
 

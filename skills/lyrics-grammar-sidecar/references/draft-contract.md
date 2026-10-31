@@ -82,7 +82,7 @@ Copy every line from `source-projection.json`, add `language`, and optionally ad
 }
 ```
 
-`start` and `end` are Unicode code-point indexes, not UTF-16 units or byte offsets. In Python 3, `len(str)` and string slicing `str[start:end]` operate natively on Unicode code points. Calculate spans programmatically using `start = line_text.index(sub_text)` and `end = start + len(sub_text)` to avoid off-by-one errors from manual character counting. The preparer rebuilds every projected source field from the frozen projection; a model-side edit fails with `stale_source_projection`.
+`start` and `end` are Unicode code-point indexes, not UTF-16 units or byte offsets. In Python 3, `len(str)` and string slicing `str[start:end]` operate natively on Unicode code points. Calculate spans programmatically using `start = line_text.index(sub_text)` and `end = start + len(sub_text)` to avoid off-by-one errors from manual character counting. Alternatively, run `python scripts\resolve_spans.py "<workdir>\semantic-draft.json" --projection "<workdir>\source-projection.json" --in-place` to automatically calculate and populate code-point spans. The preparer rebuilds every projected source field from the frozen projection; a model-side edit fails with `stale_source_projection`.
 
 ## Repetition Discovery
 
@@ -94,10 +94,10 @@ python scripts\discover_repetitions.py `
   --projection "<workdir>\source-projection.json" `
   --workdir "<workdir>" `
   --learner-language "<learner language>" `
-  --replace
+  --replace --in-place
 ```
 
-The tool writes `repetition-candidates.json`. Copy each candidate's `repetitionId` and `occurrences` array verbatim into the draft:
+Pass `--in-place` to automatically update `repetitionGroups` in the draft, or copy each candidate's `repetitionId` and `occurrences` array verbatim into the draft:
 
 ```json
 {

@@ -2330,6 +2330,83 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             )
 
 
+    def test_discover_repetitions_in_place_and_resolve_spans(self) -> None:
+        scripts = SKILL_ROOT / "scripts"
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            source = base / "cli-source.lrc"
+            source.write_bytes((FIXTURES / "ja" / "source.lrc").read_bytes())
+            work = base / "cli-source.grammar-work"
+            projection_path = work / "source-projection.json"
+
+            self.run_cli(
+                str(scripts / "project_source.py"),
+                str(source),
+                "--song-id",
+                "Fixture - Japanese Promise",
+            )
+            projection = load_projection(projection_path)
+            draft = simple_document(
+                projection,
+                source_language="ja",
+                learner_language="zh-CN",
+                meaning_text="你给我的约定，我至今仍记得。",
+                explanation="跨行短语构成完整回忆。",
+                gloss="你给你的小小约定",
+            )
+            phrase_seg = draft["phrases"][0]["occurrences"][0]["sourceSegments"][0]
+            phrase_seg["start"] = 999
+            phrase_seg["end"] = 999
+
+            draft_path = work / "semantic-draft.json"
+            write_json_atomic(draft_path, draft)
+
+            proc_query = self.run_cli(
+                str(scripts / "resolve_spans.py"),
+                "--projection",
+                str(projection_path),
+                "--line",
+                "0",
+                "--text",
+                phrase_seg["text"],
+            )
+            self.assertIn('"lineId"', proc_query.stdout)
+
+            self.run_cli(
+                str(scripts / "resolve_spans.py"),
+                str(draft_path),
+                "--projection",
+                str(projection_path),
+                "--in-place",
+            )
+            fixed_draft = read_json(draft_path)
+            fixed_seg = fixed_draft["phrases"][0]["occurrences"][0]["sourceSegments"][0]
+            self.assertNotEqual(999, fixed_seg["start"])
+            self.assertEqual(
+                fixed_seg["text"],
+                projection["lines"][0]["text"][fixed_seg["start"]:fixed_seg["end"]],
+            )
+
+            self.run_cli(
+                str(scripts / "discover_repetitions.py"),
+                str(draft_path),
+                "--projection",
+                str(projection_path),
+                "--workdir",
+                str(work),
+                "--learner-language",
+                "zh-CN",
+                "--replace",
+                "--in-place",
+            )
+            updated_draft = read_json(draft_path)
+            candidates = read_json(work / "repetition-candidates.json")
+            self.assertEqual(
+                len(candidates["candidates"]),
+                len(updated_draft["repetitionGroups"]),
+            )
+
+
 if __name__ == "__main__":
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     sys.dont_write_bytecode = True

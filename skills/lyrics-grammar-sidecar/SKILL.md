@@ -88,10 +88,19 @@ python scripts\discover_repetitions.py `
   --projection "<workdir>\source-projection.json" `
   --workdir "<workdir>" `
   --learner-language "<learner language>" `
-  --replace
+  --replace --in-place
 ```
 
-Copy every candidate's `repetitionId` and `occurrences` verbatim into the draft's `repetitionGroups`. The grammar child may not invent or alter groups.
+Pass `--in-place` to automatically update `repetitionGroups` in the draft, or copy every candidate's `repetitionId` and `occurrences` verbatim into `repetitionGroups`. The grammar child may not invent or alter groups.
+
+Run `scripts\resolve_spans.py` to automatically verify or fix Unicode code-point spans:
+
+```powershell
+python scripts\resolve_spans.py `
+  "<workdir>\semantic-draft.json" `
+  --projection "<workdir>\source-projection.json" `
+  --in-place
+```
 
 After the child returns and the draft is final, the parent records the actual grammar-child identity:
 

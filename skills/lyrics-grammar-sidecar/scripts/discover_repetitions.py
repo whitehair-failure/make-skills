@@ -16,7 +16,7 @@ from sidecarlib import (
     read_json,
     write_json_atomic,
 )
-from v2lib import discover_repetition_candidates
+from v2lib import candidate_groups, discover_repetition_candidates
 
 
 def main() -> int:
@@ -43,6 +43,11 @@ def main() -> int:
         help="Candidate path (default: <workdir>/repetition-candidates.json)",
     )
     parser.add_argument("--replace", action="store_true")
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="Update repetitionGroups in the semantic draft JSON in-place",
+    )
     args = parser.parse_args()
 
     draft_path = args.draft.expanduser()
@@ -63,6 +68,11 @@ def main() -> int:
             learner_language=args.learner_language,
         )
         changed = write_json_atomic(output, candidates, replace=args.replace)
+        if args.in_place:
+            groups = candidate_groups(candidates)
+            draft["repetitionGroups"] = groups
+            write_json_atomic(draft_path, draft, replace=True)
+            print(f"updated: {draft_path} (repetitionGroups: {len(groups)})")
     except SidecarError as exc:
         print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
         return 2

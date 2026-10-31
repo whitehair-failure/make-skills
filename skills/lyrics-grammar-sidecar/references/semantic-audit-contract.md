@@ -71,6 +71,8 @@ Stable codes:
 
 ## Validation and Identity
 
+The audit report schema is located at `schema/v2/semantic-audit.schema.json`. Auditors should run `validate_audit.py` directly without importing internal Python modules or inspecting implementation details.
+
 Before returning, the audit child should self-verify the report:
 
 ```powershell

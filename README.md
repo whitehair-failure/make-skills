@@ -78,8 +78,8 @@ Read and follow $Grammar\SKILL.md and
 $Grammar\references\draft-contract.md.
 Read only the original LRC, source projection, and frozen translated.lrc.
 Write <workdir>\semantic-draft.json.
-Run repetition discovery after blocks are complete and copy every candidate
-verbatim into repetitionGroups.
+Run repetition discovery with --in-place after blocks are complete, or copy
+every candidate verbatim into repetitionGroups.
 Do not edit the translation or write <song>.json.
 ```
 
@@ -91,7 +91,16 @@ python "$Grammar\scripts\discover_repetitions.py" `
   --projection "$Work\source-projection.json" `
   --workdir $Work `
   --learner-language "<target language>" `
-  --replace
+  --replace --in-place
+```
+
+The child may also run `resolve_spans.py` to automatically verify or fix Unicode code-point spans:
+
+```powershell
+python "$Grammar\scripts\resolve_spans.py" `
+  "$Work\semantic-draft.json" `
+  --projection "$Work\source-projection.json" `
+  --in-place
 ```
 
 After the draft is final, record the actual child ID:
