@@ -42,7 +42,19 @@ $Grammar = "$Skills\lyrics-grammar-sidecar"
 $Work = "C:\Music\Song.grammar-work"
 ```
 
-#### 1. Source projection
+#### 1. Translation child
+
+Dispatch a fresh child (skip if `C:\Music\Song.lrc` is already bilingual):
+
+```text
+Read and follow $Skills\lyrics-translator\SKILL.md.
+Translate C:\Music\Song.lrc into <target language>.
+Do not produce grammar JSON.
+```
+
+The translator strips timestamps, translates pure lyrics in plain text, and merges back into `C:\Music\Song.lrc`.
+
+#### 2. Source projection and freeze
 
 ```powershell
 python "$Grammar\scripts\project_source.py" "C:\Music\Song.lrc" `
@@ -51,22 +63,11 @@ python "$Grammar\scripts\project_source.py" "C:\Music\Song.lrc" `
 
 The default output is `C:\Music\Song.grammar-work\source-projection.json`.
 
-#### 2. Translation child and freeze
-
-Dispatch a fresh child:
-
-```text
-Read and follow $Skills\lyrics-translator\SKILL.md.
-Translate C:\Music\Song.lrc into <target language>.
-Write the accepted bilingual LRC to <workdir>\accepted-translated.lrc.
-Do not produce grammar JSON.
-```
-
 After user acceptance:
 
 ```powershell
 python "$Grammar\scripts\verify_translation.py" `
-  "$Work\source-projection.json" "$Work\accepted-translated.lrc" `
+  "$Work\source-projection.json" "C:\Music\Song.lrc" `
   --workdir $Work
 ```
 

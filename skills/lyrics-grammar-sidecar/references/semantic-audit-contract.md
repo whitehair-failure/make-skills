@@ -45,7 +45,7 @@ Warnings may be recorded without failing. Any error finding makes the audit fail
 }
 ```
 
-`reviewedBlockIds` and `reviewedMeaningUnitIds` must exactly match the IDs in the candidate, without omissions or duplicates.
+`reviewedBlockIds` and `reviewedMeaningUnitIds` must exactly match the IDs in the candidate, without omissions or duplicates. They can be extracted directly from the candidate: `reviewedBlockIds = [b["blockId"] for b in candidate["blocks"]]` and `reviewedMeaningUnitIds = [m["meaningUnitId"] for m in candidate["meaningUnits"]]`.
 
 Finding shape:
 
@@ -71,15 +71,17 @@ Stable codes:
 
 ## Validation and Identity
 
-After writing the report, the parent may run:
+Before returning, the audit child should self-verify the report:
 
 ```powershell
-python scripts\validate_audit.py `
+python -X utf8 scripts\validate_audit.py `
   "<workdir>\analysis-candidate.json" `
   --candidate-hash "<workdir>\analysis-candidate.sha256" `
   --learner-language "<learner language>" `
   "<workdir>\semantic-audit.json"
 ```
+
+On Windows, always invoke Python with `-X utf8` to avoid OEM code page corruption with Japanese and Chinese text.
 
 Then record the audit child's actual transcript identity:
 

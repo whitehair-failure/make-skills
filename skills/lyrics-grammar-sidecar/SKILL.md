@@ -47,16 +47,16 @@ The projection owns line IDs, source order, timestamps, fingerprints, source tex
 
 ## 2. Freeze the Accepted Translation
 
-The translation is produced by the unchanged `lyrics-translator` Skill. After the user accepts it:
+The translation is produced by the unchanged `lyrics-translator` Skill on `<song.lrc>`. After the user accepts it:
 
 ```powershell
 python scripts\verify_translation.py `
   "<workdir>\source-projection.json" `
-  "<accepted-translated.lrc>" `
+  "<song.lrc>" `
   --workdir "<workdir>"
 ```
 
-This writes `translated.lrc` and `translation-manifest.json`. A later edit fails closed.
+This writes `translated.lrc` and `translation-manifest.json`. (If an alternate accepted bilingual path was used, pass that instead). A later edit fails closed.
 
 ## 3. Fresh Grammar Child
 

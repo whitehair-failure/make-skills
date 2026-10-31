@@ -38,34 +38,35 @@ Never fall back to inline translation, grammar analysis, or self-audit.
 
 ## Phase 1: Translate and Freeze
 
-1. Create the source projection:
+1. Dispatch a fresh translation child (skip if `<song.lrc>` is already bilingual and accepted):
+
+```text
+Read and follow <skills>\lyrics-translator\SKILL.md.
+Translate <song.lrc> into <target learner language>.
+Do not produce grammar JSON.
+```
+
+The translation child must strictly follow `lyrics-translator`: run `lrc_strip.py` to produce a timestamp-free plain text working file, translate in plain text without timestamp distraction, and run `lrc_merge.py` to merge translations into `<song.lrc>`. Do not add a translation wrapper Skill, do not expose `<workdir>` or projection internals to the translation child, and do not restate the translator's quality rules.
+
+2. Create the source projection:
 
 ```powershell
 python <grammar-skill>\scripts\project_source.py "<song.lrc>" `
   --song-id "<songId>"
 ```
 
-2. Dispatch a fresh translation child:
-
-```text
-Read and follow <skills>\lyrics-translator\SKILL.md.
-Translate <song.lrc> into <target learner language>.
-Write the accepted bilingual LRC to <workdir>\accepted-translated.lrc.
-Do not produce grammar JSON.
-```
-
-Do not add a translation wrapper Skill or restate the translator's quality rules.
+`project_source.py` canonicalizes the source rows (automatically ignoring interleaved translation rows if present) and writes `<workdir>\source-projection.json`.
 
 3. After the user accepts the translation, freeze it:
 
 ```powershell
 python <grammar-skill>\scripts\verify_translation.py `
   "<workdir>\source-projection.json" `
-  "<workdir>\accepted-translated.lrc" `
+  "<song.lrc>" `
   --workdir "<workdir>"
 ```
 
-The parent owns acceptance. Do not proceed if freezing fails. Do not edit `translated.lrc` after this point.
+This verifies the bilingual handoff in `<song.lrc>` against the source projection, freezes a snapshot to `<workdir>\translated.lrc`, and writes `translation-manifest.json`. (If the accepted translation resides in an alternate file, pass that path as `<accepted-lrc>` instead). The parent owns acceptance. Do not proceed if freezing fails. Do not edit `translated.lrc` after this point.
 
 ## Phase 2: Fresh Grammar Analysis
 
@@ -77,6 +78,7 @@ Read and follow <grammar-skill>\SKILL.md and
 Read only the original LRC, source projection, and frozen translated.lrc.
 Write only <workdir>\semantic-draft.json.
 Use learner language <target>.
+You can run scripts\validate.py at any time during drafting to check your draft.
 Run discover_repetitions.py after blocks are complete and copy every candidate
 verbatim into repetitionGroups.
 Do not write <song>.json and do not alter the frozen translation.
@@ -126,6 +128,7 @@ Audit <workdir>\analysis-candidate.json against the original LRC, frozen
 translated.lrc, and candidate SHA-256. The semantic draft is read-only
 supporting context; the candidate is the reviewed artifact.
 Write only <workdir>\semantic-audit.json.
+Self-verify with scripts\validate_audit.py before returning.
 Do not edit the draft, candidate, hash, translation, or <song>.json.
 Use learner language <target>.
 ```
@@ -193,6 +196,15 @@ python <grammar-skill>\scripts\validate_all.py `
 ```
 
 Report the final path and validation status.
+
+## Milestone Progress Visibility
+
+Because grammar analysis and semantic audit are in-depth multi-minute tasks, the parent agent should emit a concise single-line milestone progress message to the user at each transition:
+
+- **Phase 1 complete**: Translation accepted and frozen to `<workdir>\translated.lrc`.
+- **Phase 2 complete**: Semantic draft authored and candidate frozen to `<workdir>\analysis-candidate.json`.
+- **Phase 3 complete**: Semantic audit verified with `status: "pass"`.
+- **Phase 4 complete**: Atomic finalization finished and full sidecar chain verified.
 
 ## Boundaries
 

@@ -21,6 +21,17 @@ semantic-draft.json
 
 The grammar child may not invent, merge, shorten, lengthen, or omit a repetition candidate. If the draft fails preparation, revise the semantic draft in a fresh grammar child; do not edit the frozen translation.
 
+During authoring, the grammar child can run `scripts\validate.py` at any time to verify Schema v2 conformance, block line coverage, code-point spans, and shared occurrences before final preparation:
+
+```powershell
+python -X utf8 scripts\validate.py `
+  "<workdir>\semantic-draft.json" `
+  --projection "<workdir>\source-projection.json" `
+  --learner-language "<target>"
+```
+
+On Windows, always invoke Python with `-X utf8` so Japanese and Chinese characters in logs and error reports render cleanly without OEM code page corruption.
+
 ## Top Level
 
 ```json
@@ -71,7 +82,7 @@ Copy every line from `source-projection.json`, add `language`, and optionally ad
 }
 ```
 
-`start` and `end` are Unicode code-point indexes, not UTF-16 units. The preparer rebuilds every projected source field from the frozen projection; a model-side edit fails with `stale_source_projection`.
+`start` and `end` are Unicode code-point indexes, not UTF-16 units or byte offsets. In Python 3, `len(str)` and string slicing `str[start:end]` operate natively on Unicode code points. Calculate spans programmatically using `start = line_text.index(sub_text)` and `end = start + len(sub_text)` to avoid off-by-one errors from manual character counting. The preparer rebuilds every projected source field from the frozen projection; a model-side edit fails with `stale_source_projection`.
 
 ## Repetition Discovery
 
