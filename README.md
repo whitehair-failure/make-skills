@@ -189,6 +189,23 @@ python "$Grammar\scripts\validate_all.py" `
 
 The generated file is always `dirname(lrc) / basename(lrc, ".lrc") + ".json"`. Existing differing output is preserved unless the user explicitly passes `--replace`. An existing Schema v1 production file must be regenerated with `--replace`; it is never read as compatible input.
 
+#### 6. Batch execution mode
+
+When processing multiple LRC files in batch, the CLI scripts and workflow coordinate batch translation with isolated analysis:
+
+```powershell
+# Phase 1: Batch project and batch freeze accepted translations
+python "$Grammar\scripts\project_source.py" "C:\Music\Song1.lrc" "C:\Music\Song2.lrc"
+python "$Grammar\scripts\verify_translation.py" --batch "C:\Music\Song1.lrc" "C:\Music\Song2.lrc"
+
+# Phase 2 & 3: Fresh child isolation is preserved per song; prepare can run in batch:
+python "$Grammar\scripts\prepare.py" "C:\Music\Song1.lrc" "C:\Music\Song2.lrc" --learner-language "<target language>"
+
+# Phase 4: Batch finalization and complete validation
+python "$Grammar\scripts\finalize.py" "C:\Music\Song1.lrc" "C:\Music\Song2.lrc" --learner-language "<target language>"
+python "$Grammar\scripts\validate_all.py" --batch "C:\Music\Song1.lrc" "C:\Music\Song2.lrc" --learner-language "<target language>"
+```
+
 ### Hash and Isolation Chain
 
 ```text

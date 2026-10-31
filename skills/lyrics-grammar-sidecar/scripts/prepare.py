@@ -17,30 +17,30 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
             "Validate a v2 semantic draft, exact repetition completion, frozen "
-            "translation, and source projection; write the candidate and hash."
+            "translation, and source projection; write the candidate and hash (single or batch)."
         )
     )
-    parser.add_argument("lrc", type=Path, help="Original local .lrc file")
+    parser.add_argument("lrc", type=Path, nargs="+", help="Original local .lrc file(s)")
     parser.add_argument(
-        "--projection", type=Path, required=True, help="source-projection.json"
+        "--projection", type=Path, help="source-projection.json (single file only)"
     )
     parser.add_argument(
-        "--workdir", type=Path, required=True, help="<song>.grammar-work directory"
+        "--workdir", type=Path, help="<song>.grammar-work directory (single file only)"
     )
     parser.add_argument(
         "--draft",
         type=Path,
-        help="semantic-draft.json (default: <workdir>/semantic-draft.json)",
+        help="semantic-draft.json (single file only; default: <workdir>/semantic-draft.json)",
     )
     parser.add_argument(
         "--candidate",
         type=Path,
-        help="Candidate output (default: <workdir>/analysis-candidate.json)",
+        help="Candidate output (single file only; default: <workdir>/analysis-candidate.json)",
     )
     parser.add_argument(
         "--candidate-hash",
         type=Path,
-        help="Hash output (default: <workdir>/analysis-candidate.sha256)",
+        help="Hash output (single file only; default: <workdir>/analysis-candidate.sha256)",
     )
     parser.add_argument(
         "--learner-language",
@@ -49,31 +49,60 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    workdir = args.workdir.expanduser().resolve()
-    candidate_output = (
-        args.candidate or (workdir / "analysis-candidate.json")
-    ).expanduser().resolve()
-    try:
-        candidate, report = prepare_semantic_candidate(
-            args.lrc,
-            args.projection,
-            workdir,
-            args.draft or (workdir / "semantic-draft.json"),
-            learner_language=args.learner_language,
-            candidate_path=args.candidate,
-            candidate_hash_path=args.candidate_hash,
+    fail_count = 0
+    for lrc_path in args.lrc:
+        lrc_path = lrc_path.expanduser().resolve()
+        workdir = (
+            args.workdir.expanduser().resolve()
+            if (len(args.lrc) == 1 and args.workdir is not None)
+            else (lrc_path.parent / f"{lrc_path.stem}.grammar-work").resolve()
         )
-    except SidecarError as exc:
-        print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
-        print(f"validationReport: {workdir / 'validation-report.json'}", file=sys.stderr)
-        return 2
+        projection_path = (
+            args.projection.expanduser().resolve()
+            if (len(args.lrc) == 1 and args.projection is not None)
+            else (workdir / "source-projection.json")
+        )
+        draft_path = (
+            args.draft
+            if (len(args.lrc) == 1 and args.draft is not None)
+            else (workdir / "semantic-draft.json")
+        )
+        candidate_path = (
+            args.candidate
+            if (len(args.lrc) == 1 and args.candidate is not None)
+            else (workdir / "analysis-candidate.json")
+        )
+        candidate_hash_path = (
+            args.candidate_hash
+            if (len(args.lrc) == 1 and args.candidate_hash is not None)
+            else (workdir / "analysis-candidate.sha256")
+        )
 
-    print(f"written: {candidate_output}")
-    print(f"candidateHash: {report['candidateHash']}")
-    print(f"repetitionGroups: {len(candidate['repetitionGroups'])}")
-    print(f"validationReport: {workdir / 'validation-report.json'}")
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0
+        try:
+            candidate, report = prepare_semantic_candidate(
+                lrc_path,
+                projection_path,
+                workdir,
+                draft_path,
+                learner_language=args.learner_language,
+                candidate_path=candidate_path,
+                candidate_hash_path=candidate_hash_path,
+            )
+            print(f"written: {candidate_path}")
+            print(f"candidateHash: {report['candidateHash']}")
+            print(f"repetitionGroups: {len(candidate['repetitionGroups'])}")
+            print(f"validationReport: {workdir / 'validation-report.json'}")
+            if len(args.lrc) == 1:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+        except SidecarError as exc:
+            print(f"ERROR [{exc.code}] {exc.path}: {exc.message}", file=sys.stderr)
+            print(f"validationReport: {workdir / 'validation-report.json'}", file=sys.stderr)
+            fail_count += 1
+        except Exception as exc:
+            print(f"ERROR: failed on {lrc_path.name}: {exc}", file=sys.stderr)
+            fail_count += 1
+
+    return 0 if fail_count == 0 else 2
 
 
 if __name__ == "__main__":

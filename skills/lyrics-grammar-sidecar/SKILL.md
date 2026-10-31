@@ -220,6 +220,50 @@ python scripts\validate_all.py `
   --learner-language "<learner language>"
 ```
 
+## Batch Operations
+
+The deterministic CLI tools natively support batch execution across multiple songs:
+
+- **Batch Source Projection**:
+
+```powershell
+python scripts\project_source.py "<song1.lrc>" "<song2.lrc>" ...
+```
+
+Derives `songId` from each file's stem and writes to `<song>.grammar-work\source-projection.json`.
+
+- **Batch Translation Freeze**:
+
+```powershell
+python scripts\verify_translation.py --batch "<song1.lrc>" "<song2.lrc>" ...
+```
+
+Verifies bilingual LRC content against each song's source projection and writes `translated.lrc` and `translation-manifest.json` in each song's work directory.
+
+- **Batch Candidate Preparation**:
+
+```powershell
+python scripts\prepare.py "<song1.lrc>" "<song2.lrc>" ... --learner-language "<learner language>"
+```
+
+Validates projections, schemas, repetitions, and mappings across all songs, generating candidates and hashes in their respective work directories.
+
+- **Batch Finalization**:
+
+```powershell
+python scripts\finalize.py "<song1.lrc>" "<song2.lrc>" ... --learner-language "<learner language>"
+```
+
+Atomically produces sibling `<song>.json` for each song passing full cryptographic and audit chain checks.
+
+- **Batch Complete Validation**:
+
+```powershell
+python scripts\validate_all.py --batch "<song1.lrc>" "<song2.lrc>" ... --learner-language "<learner language>"
+```
+
+Verifies the production artifacts and complete audit chains across all songs, returning exit code 0 on complete batch success.
+
 ## Validation Boundary
 
 Deterministic validation owns:

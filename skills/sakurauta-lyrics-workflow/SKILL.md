@@ -1,6 +1,6 @@
 ---
 name: sakurauta-lyrics-workflow
-description: Create a bilingual LRC translation and a SakuraUta Schema v2 grammar-analysis sidecar. The parent coordinates three fresh child roles for translation, grammar analysis, and independent semantic audit; deterministic scripts freeze and finalize the contract.
+description: Create a bilingual LRC translation and a SakuraUta Schema v2 grammar-analysis sidecar. The parent coordinates three fresh child roles for translation, grammar analysis, and independent semantic audit; deterministic scripts freeze and finalize the contract. Supports single-file and batch execution modes.
 version: 2.0.0
 ---
 
@@ -199,6 +199,32 @@ python <grammar-skill>\scripts\validate_all.py `
 ```
 
 Report the final path and validation status.
+
+## Batch Execution Mode
+
+When translating and generating grammar sidecars for multiple `.lrc` files in a batch, the workflow balances batch execution efficiency with strict Schema v2 cryptographic isolation and semantic accuracy:
+
+1. **Batch Translation (Phase 1)**: Dispatch a single fresh translation child with all target `.lrc` files. The child executes batch operations according to `lyrics-translator` (`lrc_strip.py <all>`, translates pure lyrics per song, `lrc_merge.py <all>`). After user acceptance, batch-project and batch-freeze the translations deterministically:
+
+```powershell
+python <grammar-skill>\scripts\project_source.py "<song1.lrc>" "<song2.lrc>" ...
+python <grammar-skill>\scripts\verify_translation.py --batch "<song1.lrc>" "<song2.lrc>" ...
+```
+
+2. **Per-Song Isolated Analysis and Audit (Phase 2 & 3)**: Deep grammar analysis and semantic auditing cannot be grouped into a single multi-song prompt because Schema v2 isolation proofs (`isolation-grammar-analysis.json`, `isolation-semantic-audit.json`) are cryptographically bound to each song's `sourceProjectionHash` and distinct non-forked `childTranscriptId`. Furthermore, cross-song bundling causes context degradation and span hallucinations. For each song, dispatch a fresh grammar child and a separate fresh semantic-audit child using the standard single-song contracts. Preparation can be run per-song or in batch:
+
+```powershell
+python <grammar-skill>\scripts\prepare.py "<song1.lrc>" "<song2.lrc>" ... --learner-language "<target>"
+```
+
+3. **Batch Finalize and Verification (Phase 4)**: Once all songs have verified audits and recorded isolation proofs, finalize all sidecars and validate them atomically in batch:
+
+```powershell
+python <grammar-skill>\scripts\finalize.py "<song1.lrc>" "<song2.lrc>" ... --learner-language "<target>"
+python <grammar-skill>\scripts\validate_all.py --batch "<song1.lrc>" "<song2.lrc>" ... --learner-language "<target>"
+```
+
+Emit an aggregated status table summarizing the batch execution results (Song ID, Translation status, Blocks/Meaning Units count, Audit status, and Final output path).
 
 ## Milestone Progress Visibility
 

@@ -2407,6 +2407,172 @@ class GrammarSidecarV2Tests(unittest.TestCase):
             )
 
 
+    def test_batch_cli_pipeline_end_to_end(self) -> None:
+        scripts = SKILL_ROOT / "scripts"
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            src_a = base / "song_a.lrc"
+            src_a.write_bytes((FIXTURES / "ja" / "translated.lrc").read_bytes())
+            src_b = base / "song_b.lrc"
+            src_b.write_bytes((FIXTURES / "ko" / "translated.lrc").read_bytes())
+
+            # 1. Batch project_source
+            self.run_cli(
+                str(scripts / "project_source.py"),
+                str(src_a),
+                str(src_b),
+            )
+            work_a = base / "song_a.grammar-work"
+            work_b = base / "song_b.grammar-work"
+            proj_a = load_projection(work_a / "source-projection.json")
+            proj_b = load_projection(work_b / "source-projection.json")
+            self.assertEqual("song_a", proj_a["songId"])
+            self.assertEqual("song_b", proj_b["songId"])
+
+            # 2. Batch verify_translation
+            self.run_cli(
+                str(scripts / "verify_translation.py"),
+                "--batch",
+                str(src_a),
+                str(src_b),
+            )
+            self.assertTrue((work_a / "translated.lrc").is_file())
+            self.assertTrue((work_b / "translated.lrc").is_file())
+
+            # Create drafts for both songs
+            draft_a = simple_document(
+                proj_a,
+                source_language="ja",
+                learner_language="zh-CN",
+                meaning_text="你给我的约定，我至今仍记得。",
+                explanation="跨行短语构成完整回忆。",
+                gloss="你给你的小小约定",
+            )
+            write_json_atomic(work_a / "semantic-draft.json", draft_a)
+            self.run_cli(
+                str(scripts / "discover_repetitions.py"),
+                str(work_a / "semantic-draft.json"),
+                "--projection",
+                str(work_a / "source-projection.json"),
+                "--workdir",
+                str(work_a),
+                "--learner-language",
+                "zh-CN",
+                "--replace",
+                "--in-place",
+            )
+
+            draft_b = simple_document(
+                proj_b,
+                source_language="ko",
+                learner_language="zh-CN",
+                meaning_text="风吹过的街角，依然留在原地。",
+                explanation="诗意记忆的象征表达。",
+                gloss="风吹过的街角",
+            )
+            write_json_atomic(work_b / "semantic-draft.json", draft_b)
+            self.run_cli(
+                str(scripts / "discover_repetitions.py"),
+                str(work_b / "semantic-draft.json"),
+                "--projection",
+                str(work_b / "source-projection.json"),
+                "--workdir",
+                str(work_b),
+                "--learner-language",
+                "zh-CN",
+                "--replace",
+                "--in-place",
+            )
+
+            # 3. Batch prepare
+            self.run_cli(
+                str(scripts / "prepare.py"),
+                str(src_a),
+                str(src_b),
+                "--learner-language",
+                "zh-CN",
+            )
+            self.assertTrue((work_a / "analysis-candidate.json").is_file())
+            self.assertTrue((work_b / "analysis-candidate.json").is_file())
+
+            # Fake passing audits and isolation proofs for both songs
+            for song_src, work_dir in (
+                (src_a, work_a),
+                (src_b, work_b),
+            ):
+                cand_path = work_dir / "analysis-candidate.json"
+                cand_hash_path = work_dir / "analysis-candidate.sha256"
+                cand, cand_hash = load_frozen_candidate(cand_path, cand_hash_path)
+                audit = {
+                    "schema": SEMANTIC_AUDIT_SCHEMA_ID,
+                    "auditVersion": AUDIT_VERSION,
+                    "candidateSha256": cand_hash,
+                    "learnerLanguage": "zh-CN",
+                    "status": "pass",
+                    "reviewedBlockIds": [b["blockId"] for b in cand["blocks"]],
+                    "reviewedMeaningUnitIds": [m["meaningUnitId"] for m in cand["meaningUnits"]],
+                    "findings": [],
+                }
+                write_json_atomic(work_dir / "semantic-audit.json", audit)
+                self.run_cli(
+                    str(scripts / "record_isolation.py"),
+                    str(work_dir / "source-projection.json"),
+                    "--stage",
+                    "grammar-analysis",
+                    "--artifact",
+                    str(work_dir / "semantic-draft.json"),
+                    "--method",
+                    "native-subagent",
+                    "--child-transcript-id",
+                    f"grammar-{song_src.stem}",
+                    "--parent-transcript-id",
+                    "batch-parent",
+                    "--output",
+                    str(work_dir / "isolation-grammar-analysis.json"),
+                    "--replace",
+                )
+                self.run_cli(
+                    str(scripts / "record_isolation.py"),
+                    str(work_dir / "source-projection.json"),
+                    "--stage",
+                    "semantic-audit",
+                    "--artifact",
+                    str(work_dir / "semantic-audit.json"),
+                    "--method",
+                    "native-subagent",
+                    "--child-transcript-id",
+                    f"audit-{song_src.stem}",
+                    "--parent-transcript-id",
+                    "batch-parent",
+                    "--output",
+                    str(work_dir / "isolation-semantic-audit.json"),
+                    "--replace",
+                )
+
+            # 4. Batch finalize
+            self.run_cli(
+                str(scripts / "finalize.py"),
+                str(src_a),
+                str(src_b),
+                "--learner-language",
+                "zh-CN",
+            )
+            self.assertTrue((base / "song_a.json").is_file())
+            self.assertTrue((base / "song_b.json").is_file())
+
+            # 5. Batch validate_all
+            proc = self.run_cli(
+                str(scripts / "validate_all.py"),
+                "--batch",
+                str(src_a),
+                str(src_b),
+                "--learner-language",
+                "zh-CN",
+            )
+            self.assertIn("[PASS] song_a.lrc -> song_a.json", proc.stdout)
+            self.assertIn("[PASS] song_b.lrc -> song_b.json", proc.stdout)
+
+
 if __name__ == "__main__":
     os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     sys.dont_write_bytecode = True
